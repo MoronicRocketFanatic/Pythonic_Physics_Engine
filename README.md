@@ -11,9 +11,17 @@ Needs some better algorithms to avoid n^2 in the big O notation.
 * Rotation and torque.
 * Gravity.
 * Square, line, triangle, and circle collision resolution.
-* Poor performance.
+* Poor performance. ;p
+
+
+# To Do:
+- [] Render integration
+- [] Gravity
+- [] Collision Detection
+- [] Collision Resolution
+- [] Rotation/Torque calculations
 
 
 
 
-### Please send help.
+# Please send help.
