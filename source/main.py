@@ -23,9 +23,15 @@ engine_clock = pygame.time.Clock()
 delta_time = 1/FRAMERATE #lock it to 1s divided between frames to help stability
 
 #objects
-physics_objects = []
+physics_objects = [pygame_plus.Box()]
 invisible_physics_objects = [] #for invisible walls, etc
 rendered_objects = [] #rendered but without collisions, gui maybe?
+
+
+#Functions
+
+
+
 
 
 #MAIN LOOP
@@ -42,12 +48,9 @@ while engine_running:
 
 
 
-
-
-
-
-
-
+    for object in physics_objects:
+        object.draw_antialiased_wireframe(display)
+    
     pygame.display.flip()
 #EXIT PROGRAM
 pygame.quit()
