@@ -22,7 +22,10 @@ engine_clock = pygame.time.Clock()
 #GENERAL VARIABLES
 delta_time = 1/FRAMERATE #lock it to 1s divided between frames to help stability
 
-
+#objects
+physics_objects = []
+invisible_physics_objects = [] #for invisible walls, etc
+rendered_objects = [] #rendered but without collisions, gui maybe?
 
 
 #MAIN LOOP

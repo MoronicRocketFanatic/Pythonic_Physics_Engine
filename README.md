@@ -15,11 +15,11 @@ Needs some better algorithms to avoid n^2 in the big O notation.
 
 
 # To Do:
-- [] Render integration
-- [] Gravity
-- [] Collision Detection
-- [] Collision Resolution
-- [] Rotation/Torque calculations
+1. Render integration
+2. Gravity
+3. Collision Detection
+4. Collision Resolution
+5. Rotation/Torque calculations
 
 
 
