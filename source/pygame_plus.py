@@ -158,7 +158,7 @@ class Circle():
         gfxdraw.aacircle(surface, self.drawn_xy[0], self.drawn_xy[1], self.radius, self.color)
 
     
-    def update(self, x_change:int = 0, y_change:int = 0, radius_change:int = 0, rotation_change:int = 0, rotation_center:tuple = None) -> None:
+    def update_deprecated(self, x_change:int = 0, y_change:int = 0, radius_change:int = 0, rotation_change:int = 0, rotation_center:tuple = None) -> None:
         """Allows manipulation of the circle, input the amount of change you want to a variable to have it be properly updated. Rotation only makes a difference on a different rotational point."""
 
         self.x += x_change
@@ -184,6 +184,34 @@ class Circle():
         self.drawn_xy[0] = int(math.cos(math.radians(self.rotation)) * (temporary_point[0] - rotation_center[0]) - math.sin(math.radians(self.rotation)) * (temporary_point[1] - rotation_center[1]) + rotation_center[0])
         self.drawn_xy[1] = int(math.sin(math.radians(self.rotation)) * (temporary_point[0] - rotation_center[0]) + math.cos(math.radians(self.rotation)) * (temporary_point[1] - rotation_center[1]) + rotation_center[1])
 
+
+    def update(self, x:int = 0, y:int = 0, radius:int = 0) -> None:
+        """Allows manipulation of the circle, input the amount of change you want to a variable to have it be properly updated. Rotation only makes a difference on a different rotational point."""
+
+        self.x = x
+        self.y = y
+        self.radius = radius
+        # self.rotation = rotation (, rotation:int = 0, rotation_center:tuple = None)
+
+        self.diameter = self.radius*2
+        
+                
+
+        # if self.rotation > 360:
+        #     self.rotation -= 360
+        
+        # elif self.rotation < -360:
+        #     self.rotation += 360
+
+        # if rotation_center == None:
+        #     rotation_center = (self.x, self.y)
+
+
+        # temporary_point = [self.x, self.y]
+        # self.drawn_xy[0] = int(math.cos(math.radians(self.rotation)) * (temporary_point[0] - rotation_center[0]) - math.sin(math.radians(self.rotation)) * (temporary_point[1] - rotation_center[1]) + rotation_center[0])
+        # self.drawn_xy[1] = int(math.sin(math.radians(self.rotation)) * (temporary_point[0] - rotation_center[0]) + math.cos(math.radians(self.rotation)) * (temporary_point[1] - rotation_center[1]) + rotation_center[1])
+
+        self.drawn_xy = [int(x), int(y)]
 
 
 

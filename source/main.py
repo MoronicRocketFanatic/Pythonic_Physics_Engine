@@ -2,7 +2,9 @@ import pygame
 from pygame import gfxdraw
 import pygame_plus
 import solver
+from solver import Solver, Ball, Plane, Square, Triangle 
 import math
+import multiprocessing
 
 
 
@@ -23,9 +25,12 @@ engine_clock = pygame.time.Clock()
 delta_time = 1/FRAMERATE #lock it to 1s divided between frames to help stability
 
 #objects
-physics_objects = [pygame_plus.Box()]
+grav_objects = [Ball(display, WINDOW_WIDTH/2, WINDOW_HEIGHT/2)]
+no_grav_objects = [Ball(display, WINDOW_WIDTH/2, WINDOW_HEIGHT/2+100)]
 invisible_physics_objects = [] #for invisible walls, etc
 rendered_objects = [] #rendered but without collisions, gui maybe?
+
+phys_solver = Solver(grav_objects, no_grav_objects, gravity=1000)
 
 
 #Functions
@@ -37,7 +42,7 @@ rendered_objects = [] #rendered but without collisions, gui maybe?
 #MAIN LOOP
 engine_running = True
 while engine_running:
-    display.fill(0,0,0)
+    display.fill((0,0,0))
     engine_clock.tick(FRAMERATE)
     pygame.display.set_caption(f"Pythonic Physics Engine  |  Frames Per Second: {int(engine_clock.get_fps())}, Target FPS: {FRAMERATE}")
 
@@ -46,11 +51,22 @@ while engine_running:
             engine_running = False
             print("Attempting exit...")
 
+        if event.type == pygame.MOUSEBUTTONDOWN:
+            grav_objects[0].position[1] -= 10
+
+    phys_solver.update(delta_time)
 
 
-    for object in physics_objects:
-        object.draw_antialiased_wireframe(display)
-    
+    #I should split these onto three other threads for better perf
+    for object in grav_objects:
+        object.draw_antialiased_wireframe()
+
+    for object in no_grav_objects:
+        object.draw_antialiased_wireframe()
+
+    for object in rendered_objects:
+        object.draw_antialiased_wireframe()
+
     pygame.display.flip()
 #EXIT PROGRAM
 pygame.quit()
