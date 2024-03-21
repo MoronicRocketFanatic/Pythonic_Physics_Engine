@@ -8,7 +8,7 @@ import math
 class PhysicsObject():
     """Main branch for physics objects to specialize off into."""
 
-    def __init__(self, surface:pygame.Surface, x:int = 0, y:int = 0, color:pygame.Color = (200, 200, 200), rotation:int = 0, rotation_center:Vector2 = Vector2(0,0), permanent_rotation:int = 0) -> None:
+    def __init__(self, surface:pygame.Surface, x:int = 0, y:int = 0, color:pygame.Color = (200, 200, 200), rotation:int = 0, rotation_center:Vector2 = Vector2(0,0), permanent_rotation:int = 0, anchored:bool = False) -> None:
         self.surface = surface
 
         self.x = x
@@ -18,6 +18,8 @@ class PhysicsObject():
         self.rotation = rotation
         self.rotation_center = rotation_center
         self.permanent_rotation = permanent_rotation
+        self.anchored = anchored
+
 
         self.color = color
         self.acceleration = Vector2(0,0)
@@ -44,8 +46,8 @@ class PhysicsObject():
 class Ball(PhysicsObject):
     """And he said, "let there be balls!" and there was balls. The simplest and easiest to compute."""
 
-    def __init__(self, surface: pygame.Surface, x: int = 0, y: int = 0, radius:float = 10, color: pygame.Color = (200, 200, 200), rotation: int = 0, rotation_center: Vector2 = Vector2(0, 0)) -> None:
-        super().__init__(surface, x, y, color, rotation, rotation_center, 0)
+    def __init__(self, surface: pygame.Surface, x: int = 0, y: int = 0, radius:float = 10, color: pygame.Color = (200, 200, 200), rotation: int = 0, rotation_center: Vector2 = Vector2(0, 0), anchored:bool = False) -> None:
+        super().__init__(surface, x, y, color, rotation, rotation_center, 0, anchored)
 
         self.radius = radius
         self.render = pygame_plus.Circle(self.x, self.y, self.radius, self.surface, self.color, self.rotation)
@@ -85,7 +87,7 @@ class Triangle(PhysicsObject):
 class Solver():
     """The brain behind the physics engine."""
 
-    def __init__(self, grav_objects:list[PhysicsObject], no_grav_objects:list[PhysicsObject], subsets:int = 2, gravity:float = 1000) -> None:
+    def __init__(self, grav_objects:list[PhysicsObject], no_grav_objects:list[PhysicsObject], subsets:int = 8, gravity:float = 1000) -> None:
         """Here we go"""
         self.gravity = gravity
         self.grav_objects = grav_objects
@@ -103,24 +105,24 @@ class Solver():
         subset_grav = self.gravity/self.subsets #
 
         for subset in range(self.subsets): #surely there's a better way?
-            self.apply_gravity(subset_grav)
+            self.apply_gravity(self.gravity)
             self.solve_collisions()
             self.update_positions(subset_delta_time)
 
 
     
-    def update_positions(self, delta_time:float):
+    def update_positions(self, delta_time:float) -> None:
         for object in self.all_objects:
             object.update_position(delta_time)
 
 
-    def apply_gravity(self, subset_grav):
+    def apply_gravity(self, gravity) -> None:
         """Applies the gravity to all specified gravity objects."""
         for object in self.grav_objects:
-            object.accelerate(Vector2(0, subset_grav))
+            object.accelerate(Vector2(0, gravity))
 
 
-    def solve_collisions(self):
+    def solve_collisions(self) -> None:
         for object_1 in self.all_objects:
             object_1_type = type(object_1)
 
@@ -145,7 +147,7 @@ class Solver():
 
 
     
-    def ball_on_ball(self, ball_1:Ball, ball_2:Ball):
+    def ball_on_ball(self, ball_1:Ball, ball_2:Ball) -> None:
         collision_axis = ball_1.position - ball_2.position
         distance = collision_axis.length()
         if distance < ball_1.radius + ball_2.radius:
@@ -154,13 +156,16 @@ class Solver():
             except ZeroDivisionError:
                 n = Vector2()
             delta = ball_1.radius + ball_2.radius - distance
-            ball_1.position += 0.5 * delta * n
-            ball_2.position -= 0.5 * delta * n
+            ball_1.position += (0.5 * delta * n) * (not ball_1.anchored)
+            ball_2.position -= (0.5 * delta * n) * (not ball_2.anchored)
 
 
     
-    def line_on_ball(self, line, ball):
+    def line_on_ball(self, line, ball) -> None:
         line_x1 = line.position[0]
         line_y1 = line.position[1]
         line_x2 = line.position2[0]
         line_y2 = line.position2[1]
+    
+    def line_on_line(self, line_1, line_2) -> None:
+        pass

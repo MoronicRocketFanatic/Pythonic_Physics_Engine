@@ -9,8 +9,8 @@ import multiprocessing
 
 
 #USER VARIABLES
-WINDOW_WIDTH = 1920
-WINDOW_HEIGHT = 1080
+WINDOW_WIDTH = 1000
+WINDOW_HEIGHT = 700
 FRAMERATE = 60
 
 #Initialize PyGame
@@ -26,7 +26,7 @@ delta_time = 1/FRAMERATE #lock it to 1s divided between frames to help stability
 
 #objects
 grav_objects = [Ball(display, WINDOW_WIDTH/2, WINDOW_HEIGHT/2)]
-no_grav_objects = [Ball(display, WINDOW_WIDTH/2, WINDOW_HEIGHT/2+100)]
+no_grav_objects = [Ball(display, WINDOW_WIDTH/2, WINDOW_HEIGHT/2+100, anchored=True)]
 invisible_physics_objects = [] #for invisible walls, etc
 rendered_objects = [] #rendered but without collisions, gui maybe?
 
@@ -51,8 +51,9 @@ while engine_running:
             engine_running = False
             print("Attempting exit...")
 
-        if event.type == pygame.MOUSEBUTTONDOWN:
-            grav_objects[0].position[1] -= 10
+        if event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_UP:
+                grav_objects[0].position[1] -= 1
 
     phys_solver.update(delta_time)
 
