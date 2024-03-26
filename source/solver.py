@@ -11,15 +11,12 @@ class PhysicsObject():
     def __init__(self, surface:pygame.Surface, x:int = 0, y:int = 0, color:pygame.Color = (200, 200, 200), rotation:int = 0, rotation_center:Vector2 = Vector2(0,0), permanent_rotation:int = 0, anchored:bool = False) -> None:
         self.surface = surface
 
-        self.x = x
-        self.y = y
         self.position = Vector2(x, y)
         self.last_position = Vector2(x, y)
         self.rotation = rotation
         self.rotation_center = rotation_center
         self.permanent_rotation = permanent_rotation
         self.anchored = anchored
-
 
         self.color = color
         self.acceleration = Vector2(0,0)
@@ -50,24 +47,42 @@ class Ball(PhysicsObject):
         super().__init__(surface, x, y, color, rotation, rotation_center, 0, anchored)
 
         self.radius = radius
-        self.render = pygame_plus.Circle(self.x, self.y, self.radius, self.surface, self.color, self.rotation)
+        # self.render = pygame_plus.Circle(self.x, self.y, self.radius, self.surface, self.color, self.rotation)
 
 
     def draw_antialiased_wireframe(self):
-        self.render.update(self.position[0], self.position[1], self.radius)
-        self.render.color = self.color
-        self.render.draw_antialiased_wireframe()
+        gfxdraw.aacircle(self.surface, int(self.position[0]), int(self.position[1]), self.radius, self.color)
+        # self.render.update(self.position[0], self.position[1], self.radius)
+        # self.render.color = self.color
+        # self.render.draw_antialiased_wireframe()
 
     
     
 
 
 
-class Plane(PhysicsObject):
+class Line(PhysicsObject):
     """Lines of..."""
 
-    def __init__(self, surface: pygame.Surface, x: int = 0, y: int = 0, color: pygame.Color = (200, 200, 200), rotation: int = 0, rotation_center: Vector2 = Vector2(0, 0), permanent_rotation: int = 0) -> None:
+    def __init__(self, surface: pygame.Surface, x: int = 0, y: int = 0, x_2: int = 0, y_2: int = 0, color: pygame.Color = (200, 200, 200), rotation: int = 0, rotation_center: Vector2 = Vector2(0, 0), permanent_rotation: int = 0) -> None:
+        """The x_2 and y_2 are for the second point of the line because lazy"""
         super().__init__(surface, x, y, color, rotation, rotation_center, permanent_rotation)
+        self.position_2 = Vector2(x_2, y_2)
+        self.last_position_2 = Vector2(x_2, y_2)
+
+
+    def update_position(self, delta_time: float) -> None:
+        self.displacement_2 = self.position_2 - self.last_position_2
+
+        self.last_position_2 = self.position_2
+
+        self.position_2 = self.position_2 + self.displacement_2 + self.acceleration * (delta_time*delta_time) #position = position + displacement + acceleration * (delta_time * delta_time)
+        
+        super().update_position(delta_time)
+    
+
+    def draw_antialiased_wireframe(self):
+        gfxdraw.line(self.surface, int(self.position[0]), int(self.position[1]), int(self.position_2[0]), int(self.position_2[1]), self.color)
 
 
 
@@ -138,8 +153,8 @@ class Solver():
                     continue
 
 
-                if ((object_1_type == Plane) and (object_2_type == Ball)) or ((object_1_type == Ball) and (object_2_type == Plane)):
-                    if (object_1_type == Plane) and (object_2_type == Ball):
+                if ((object_1_type == Line) and (object_2_type == Ball)) or ((object_1_type == Ball) and (object_2_type == Line)):
+                    if (object_1_type == Line) and (object_2_type == Ball):
                         self.line_on_ball(object_1, object_2)
                     else:
                         self.line_on_ball(object_2, object_1)
@@ -164,8 +179,8 @@ class Solver():
     def line_on_ball(self, line, ball) -> None:
         line_x1 = line.position[0]
         line_y1 = line.position[1]
-        line_x2 = line.position2[0]
-        line_y2 = line.position2[1]
+        line_x2 = line.position_2[0]
+        line_y2 = line.position_2[1]
     
     def line_on_line(self, line_1, line_2) -> None:
         pass
