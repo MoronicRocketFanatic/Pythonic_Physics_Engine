@@ -5,12 +5,12 @@ import solver
 from solver import Solver, Ball, Line, Square, Triangle 
 import math
 import multiprocessing
-
+from random import randint
 
 
 #USER VARIABLES
 WINDOW_WIDTH = 1000
-WINDOW_HEIGHT = 700
+WINDOW_HEIGHT = 600
 FRAMERATE = 60
 
 #Initialize PyGame
@@ -25,9 +25,10 @@ engine_clock = pygame.time.Clock()
 delta_time = 1/FRAMERATE #lock it to 1s divided between frames to help stability
 
 #objects
+grav_objects = [Ball(display, WINDOW_WIDTH/2, WINDOW_HEIGHT/2)]
 grav_objects = [Ball(display, WINDOW_WIDTH/2, WINDOW_HEIGHT/2), Line(display, WINDOW_WIDTH/3, WINDOW_HEIGHT/3, WINDOW_WIDTH/3*2, WINDOW_HEIGHT/3)]
-no_grav_objects = [Ball(display, WINDOW_WIDTH/2, WINDOW_HEIGHT/2+100, anchored=True)]
-# no_grav_objects = [Ball(display, WINDOW_WIDTH/2, WINDOW_HEIGHT/2+100, anchored=True), Ball(display, WINDOW_WIDTH/3, WINDOW_HEIGHT/2+100, anchored=True), Ball(display, WINDOW_WIDTH/3*2, WINDOW_HEIGHT/2+100, anchored=True)]
+# no_grav_objects = [Line(display, 0, 0, 0, WINDOW_HEIGHT-1, anchored=True), Line(display, 0, WINDOW_HEIGHT-1, WINDOW_WIDTH-1, WINDOW_HEIGHT-1, anchored=True), Line(display, WINDOW_WIDTH-1, WINDOW_HEIGHT-1, WINDOW_WIDTH-1, 0, anchored=True), Line(display, 0, 0, WINDOW_WIDTH-1, 0, anchored=True)] BOX
+no_grav_objects = [Ball(display, WINDOW_WIDTH/2, WINDOW_HEIGHT/2+100, anchored=True), Ball(display, WINDOW_WIDTH/3, WINDOW_HEIGHT/2+100, anchored=True), Ball(display, WINDOW_WIDTH/3*2, WINDOW_HEIGHT/2+100, anchored=True)]
 invisible_physics_objects = [] #for invisible walls, etc
 rendered_objects = [] #rendered but without collisions, gui maybe?
 

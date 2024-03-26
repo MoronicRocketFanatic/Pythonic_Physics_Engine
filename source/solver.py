@@ -64,9 +64,9 @@ class Ball(PhysicsObject):
 class Line(PhysicsObject):
     """Lines of..."""
 
-    def __init__(self, surface: pygame.Surface, x: int = 0, y: int = 0, x_2: int = 0, y_2: int = 0, color: pygame.Color = (200, 200, 200), rotation: int = 0, rotation_center: Vector2 = Vector2(0, 0), permanent_rotation: int = 0) -> None:
+    def __init__(self, surface: pygame.Surface, x: int = 0, y: int = 0, x_2: int = 0, y_2: int = 0, color: pygame.Color = (200, 200, 200), rotation: int = 0, rotation_center: Vector2 = Vector2(0, 0), permanent_rotation: int = 0, anchored: bool = False) -> None:
         """The x_2 and y_2 are for the second point of the line because lazy"""
-        super().__init__(surface, x, y, color, rotation, rotation_center, permanent_rotation)
+        super().__init__(surface, x, y, color, rotation, rotation_center, permanent_rotation, anchored)
         self.position_2 = Vector2(x_2, y_2)
         self.last_position_2 = Vector2(x_2, y_2)
 
@@ -230,7 +230,6 @@ class Solver():
         ball_distance = math.sqrt((ball_x_distance * ball_x_distance) + (ball_y_distance * ball_y_distance))
 
         if ball_distance <= ball.radius:
-            print("TRUE")
             ball_collision_axis = Vector2(closest_x, closest_y) - ball.position
             try:
                 n = ball_collision_axis / ball_distance
