@@ -175,6 +175,16 @@ class Solver():
             ball_2.position -= (0.5 * delta * n) * (not ball_2.anchored)
 
 
+    def line_on_point(self, line: Line, point: Vector2) -> bool:
+        line_length = math.dist(line.position, line.position_2)
+        distance_1 = math.dist(point, line.position)
+        distance_2 = math.dist(point, line.position_2)
+
+        buffer = 0.1
+
+        if ((distance_1 + distance_2) >= (line_length - buffer)) and ((distance_1 + distance_2) >= (line_length + buffer)):
+            return True
+
     
     def line_on_ball(self, line: Line, ball: Ball) -> None:
         collision_axis = line.position - ball.position
@@ -190,7 +200,9 @@ class Solver():
                 n = Vector2()
             delta = ball.radius - distance
             line.position += (0.5 * delta * n) * (not line.anchored)
+            line.position_2 += (0.5 * delta * n) * (not line.anchored)
             ball.position -= (0.5 * delta * n) * (not ball.anchored)
+            return True
 
         elif (distance_2 < ball.radius):
             try:
@@ -198,16 +210,40 @@ class Solver():
             except ZeroDivisionError:
                 n = Vector2()
             delta = ball.radius - distance_2
+            line.position += (0.5 * delta * n) * (not line.anchored)
             line.position_2 += (0.5 * delta * n) * (not line.anchored)
             ball.position -= (0.5 * delta * n) * (not ball.anchored)
+            return True
 
         # line_x_distance = line.position[0] - line.position_2[0]
         # line_y_distance = line.position[1] - line.position_2[1]
         line_length = math.dist(line.position, line.position_2)
-        dot_product = (((ball.position[0] - line.position[0]) * (line.position_2[0] - line.position[0])) + ((ball.position[1] - line.position[1]) * (line.position_2[1] - line.position[1]))) / line_length^2
+        dot_product = (((ball.position[0] - line.position[0]) * (line.position_2[0] - line.position[0])) + ((ball.position[1] - line.position[1]) * (line.position_2[1] - line.position[1]))) / math.pow(line_length, 2)
+        closest_x = line.position[0] + (dot_product * (line.position_2[0] - line.position[0]))
+        closest_y = line.position[1] + (dot_product * (line.position_2[1] - line.position[1]))
         
-        
-        pass
+        segment_collision = self.line_on_point(line, Vector2(closest_x, closest_y))
+        if segment_collision:
+            return False
+        ball_x_distance = closest_x - ball.position[0]
+        ball_y_distance = closest_y - ball.position[1]
+        ball_distance = math.sqrt((ball_x_distance * ball_x_distance) + (ball_y_distance * ball_y_distance))
+
+        if ball_distance <= ball.radius:
+            print("TRUE")
+            ball_collision_axis = Vector2(closest_x, closest_y) - ball.position
+            try:
+                n = ball_collision_axis / ball_distance
+            except ZeroDivisionError:
+                n = Vector2()
+            delta = ball.radius - ball_distance
+            line.position += (0.5 * delta * n) * (not line.anchored)
+            line.position_2 += (0.5 * delta * n) * (not line.anchored)
+            ball.position -= (0.5 * delta * n) * (not ball.anchored)
+            return True
+
+        return False
+
     
     def line_on_line(self, line_1: Line, line_2: Line) -> None:
         pass

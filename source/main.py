@@ -26,7 +26,8 @@ delta_time = 1/FRAMERATE #lock it to 1s divided between frames to help stability
 
 #objects
 grav_objects = [Ball(display, WINDOW_WIDTH/2, WINDOW_HEIGHT/2), Line(display, WINDOW_WIDTH/3, WINDOW_HEIGHT/3, WINDOW_WIDTH/3*2, WINDOW_HEIGHT/3)]
-no_grav_objects = [Ball(display, WINDOW_WIDTH/2, WINDOW_HEIGHT/2+100, anchored=True), Ball(display, WINDOW_WIDTH/3, WINDOW_HEIGHT/2+100, anchored=True), Ball(display, WINDOW_WIDTH/3*2, WINDOW_HEIGHT/2+100, anchored=True)]
+no_grav_objects = [Ball(display, WINDOW_WIDTH/2, WINDOW_HEIGHT/2+100, anchored=True)]
+# no_grav_objects = [Ball(display, WINDOW_WIDTH/2, WINDOW_HEIGHT/2+100, anchored=True), Ball(display, WINDOW_WIDTH/3, WINDOW_HEIGHT/2+100, anchored=True), Ball(display, WINDOW_WIDTH/3*2, WINDOW_HEIGHT/2+100, anchored=True)]
 invisible_physics_objects = [] #for invisible walls, etc
 rendered_objects = [] #rendered but without collisions, gui maybe?
 
