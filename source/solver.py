@@ -117,7 +117,7 @@ class Solver():
         self.time_elapsed += delta_time
         subset_delta_time = delta_time/self.subsets #we need to distribute time accordingly so that time isn't screwed up
         self.all_objects = self.grav_objects + self.no_grav_objects #we need to constantly update this to account for all sorts of changes
-        subset_grav = self.gravity/self.subsets #
+        # subset_grav = self.gravity/self.subsets #Kinda useless from what it seems
 
         for subset in range(self.subsets): #surely there's a better way?
             self.apply_gravity(self.gravity)
@@ -176,11 +176,38 @@ class Solver():
 
 
     
-    def line_on_ball(self, line, ball) -> None:
-        line_x1 = line.position[0]
-        line_y1 = line.position[1]
-        line_x2 = line.position_2[0]
-        line_y2 = line.position_2[1]
+    def line_on_ball(self, line: Line, ball: Ball) -> None:
+        collision_axis = line.position - ball.position
+        collision_axis_2 = line.position_2 - ball.position
+
+        distance = collision_axis.length()
+        distance_2 = collision_axis_2.length()
+
+        if (distance < ball.radius):
+            try:
+                n = collision_axis / distance
+            except ZeroDivisionError:
+                n = Vector2()
+            delta = ball.radius - distance
+            line.position += (0.5 * delta * n) * (not line.anchored)
+            ball.position -= (0.5 * delta * n) * (not ball.anchored)
+
+        elif (distance_2 < ball.radius):
+            try:
+                n = collision_axis_2 / distance_2
+            except ZeroDivisionError:
+                n = Vector2()
+            delta = ball.radius - distance_2
+            line.position_2 += (0.5 * delta * n) * (not line.anchored)
+            ball.position -= (0.5 * delta * n) * (not ball.anchored)
+
+        # line_x_distance = line.position[0] - line.position_2[0]
+        # line_y_distance = line.position[1] - line.position_2[1]
+        line_length = math.dist(line.position, line.position_2)
+        dot_product = (((ball.position[0] - line.position[0]) * (line.position_2[0] - line.position[0])) + ((ball.position[1] - line.position[1]) * (line.position_2[1] - line.position[1]))) / line_length^2
+        
+        
+        pass
     
-    def line_on_line(self, line_1, line_2) -> None:
+    def line_on_line(self, line_1: Line, line_2: Line) -> None:
         pass
