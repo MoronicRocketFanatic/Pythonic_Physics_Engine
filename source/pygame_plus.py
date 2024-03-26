@@ -158,7 +158,7 @@ class Circle():
         gfxdraw.aacircle(surface, self.drawn_xy[0], self.drawn_xy[1], self.radius, self.color)
 
     
-    def update_deprecated(self, x_change:int = 0, y_change:int = 0, radius_change:int = 0, rotation_change:int = 0, rotation_center:tuple = None) -> None:
+    def update_deprecated(self, x_change:int = 0, y_change:int = 0, radius_change:int = 0, rotation_change:int = 0, rotation_center:tuple = None) -> None: #only really deprecated because this is somewhat worthless for a physics engine
         """Allows manipulation of the circle, input the amount of change you want to a variable to have it be properly updated. Rotation only makes a difference on a different rotational point."""
 
         self.x += x_change
