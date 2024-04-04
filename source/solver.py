@@ -1,7 +1,7 @@
 import pygame
 from pygame import Vector2
 from pygame import gfxdraw
-import pygame_plus
+import pygame_plus  # noqa: F401
 import math
 
 
@@ -9,6 +9,18 @@ class PhysicsObject():
     """Main branch for physics objects to specialize off into."""
 
     def __init__(self, surface:pygame.Surface, x:int = 0, y:int = 0, color:pygame.Color = (200, 200, 200), rotation:int = 0, rotation_center:Vector2 = Vector2(0,0), permanent_rotation:int = 0, anchored:bool = False) -> None:
+        """_summary_
+
+        Args:
+            surface (pygame.Surface): _description_
+            x (int, optional): _description_. Defaults to 0.
+            y (int, optional): _description_. Defaults to 0.
+            color (pygame.Color, optional): _description_. Defaults to (200, 200, 200).
+            rotation (int, optional): _description_. Defaults to 0.
+            rotation_center (Vector2, optional): _description_. Defaults to Vector2(0,0).
+            permanent_rotation (int, optional): _description_. Defaults to 0.
+            anchored (bool, optional): _description_. Defaults to False.
+        """        
         self.surface = surface
 
         self.position = Vector2(x, y)
@@ -50,8 +62,12 @@ class Ball(PhysicsObject):
         # self.render = pygame_plus.Circle(self.x, self.y, self.radius, self.surface, self.color, self.rotation)
 
 
-    def draw_antialiased_wireframe(self):
-        gfxdraw.aacircle(self.surface, int(self.position[0]), int(self.position[1]), self.radius, self.color)
+    def draw_antialiased_wireframe(self) -> bool:
+        try:
+            gfxdraw.aacircle(self.surface, int(self.position[0]), int(self.position[1]), self.radius, self.color)
+        except OverflowError:
+            print(f"OBJECT KILLED: {self}")
+            return True
         # self.render.update(self.position[0], self.position[1], self.radius)
         # self.render.color = self.color
         # self.render.draw_antialiased_wireframe()
@@ -81,8 +97,13 @@ class Line(PhysicsObject):
         super().update_position(delta_time)
     
 
-    def draw_antialiased_wireframe(self):
-        gfxdraw.line(self.surface, int(self.position[0]), int(self.position[1]), int(self.position_2[0]), int(self.position_2[1]), self.color)
+    def draw_antialiased_wireframe(self) -> bool:
+        try:
+            gfxdraw.line(self.surface, int(self.position[0]), int(self.position[1]), int(self.position_2[0]), int(self.position_2[1]), self.color)
+        
+        except OverflowError:
+            print(f"OBJECT KILLED: {self}")
+            return True
 
 
 
@@ -152,17 +173,22 @@ class Solver():
                     self.ball_on_ball(object_1, object_2)
                     continue
 
-
-                if ((object_1_type == Line) and (object_2_type == Ball)) or ((object_1_type == Ball) and (object_2_type == Line)):
+                elif ((object_1_type == Line) and (object_2_type == Ball)) or ((object_1_type == Ball) and (object_2_type == Line)):
                     if (object_1_type == Line) and (object_2_type == Ball):
                         self.line_on_ball(object_1, object_2)
+                        continue
                     else:
                         self.line_on_ball(object_2, object_1)
+                        continue
+                        
+                elif (object_1_type == Line) and (object_2_type == Line):
+                    self.line_on_line(object_1, object_2)
+                    continue
 
 
 
     
-    def ball_on_ball(self, ball_1:Ball, ball_2:Ball) -> None:
+    def ball_on_ball(self, ball_1:Ball, ball_2:Ball) -> bool:
         collision_axis = ball_1.position - ball_2.position
         distance = collision_axis.length()
         if distance < ball_1.radius + ball_2.radius:
@@ -173,6 +199,7 @@ class Solver():
             delta = ball_1.radius + ball_2.radius - distance
             ball_1.position += (0.5 * delta * n) * (not ball_1.anchored)
             ball_2.position -= (0.5 * delta * n) * (not ball_2.anchored)
+            return True
 
 
     def line_on_point(self, line: Line, point: Vector2) -> bool:
@@ -186,7 +213,8 @@ class Solver():
             return True
 
     
-    def line_on_ball(self, line: Line, ball: Ball) -> None:
+    def line_on_ball(self, line: Line, ball: Ball) -> bool:
+        
         collision_axis = line.position - ball.position
         collision_axis_2 = line.position_2 - ball.position
 
@@ -244,5 +272,62 @@ class Solver():
         return False
 
     
-    def line_on_line(self, line_1: Line, line_2: Line) -> None:
-        pass
+    def line_on_line(self, line_1: Line, line_2: Line) -> bool:
+        x_1 = line_1.position[0]
+        x_2 = line_1.position_2[0]
+        y_1 = line_1.position[1]
+        y_2 = line_1.position_2[1]
+        
+        x_3 = line_2.position[0]
+        x_4 = line_2.position_2[0]
+        y_3 = line_2.position[1]
+        y_4 = line_2.position_2[1]
+        
+        # intersect_distance_1 = ((x_4-x_3)*(y_1-y_3) - (y_4-y_3)*(x_1-x_3)) / ((y_4-y_3)*(x_2-x_1) - (x_4-x_3)*(y_2-y_1))
+        # intersect_distance_2 = ((x_2-x_1)*(y_1-y_3) - (y_2-y_1)*(x_1-x_3)) / ((y_4-y_3)*(x_2-x_1) - (x_4-x_3)*(y_2-y_1))
+        
+        # if (not self.line_on_point(line_2, line_1.position)) and (not self.line_on_point(line_2, line_1.position_2)):
+        try:
+            intersect_distance_1 = ((x_4-x_3)*(y_1-y_3) - (y_4-y_3)*(x_1-x_3)) / ((y_4-y_3)*(x_2-x_1) - (x_4-x_3)*(y_2-y_1))
+            intersect_distance_2 = ((x_2-x_1)*(y_1-y_3) - (y_2-y_1)*(x_1-x_3)) / ((y_4-y_3)*(x_2-x_1) - (x_4-x_3)*(y_2-y_1))
+        except ZeroDivisionError:
+            line_1.position[1] -= 1
+            line_1.position_2[1] -= 1
+            line_2.position[1] += 1
+            line_2.position_2[1] += 1
+            # print("parallel")
+            return True
+        
+        # else:
+        #     print("parallel")
+        #     return True
+        
+        
+        if (intersect_distance_1 < 0 or intersect_distance_1 > 1) or (intersect_distance_2 < 0  or intersect_distance_2 > 1):
+            return False
+        
+        intersection_position = Vector2(x_1 + (intersect_distance_1 * (x_2 - x_1)), y_1 + (intersect_distance_1 * (y_2 - y_1)))
+        gfxdraw.aacircle(line_1.surface, int(intersection_position[0]), int(intersection_position[1]), 5, (255, 0, 0))
+        
+        # print(f"intersect {intersection_position}")
+
+        # try:
+        #     n = collision_axis / intersect_distance_1
+        # except ZeroDivisionError:
+        #     n = Vector2()
+        
+        # delta = None
+        # line_1.position = line_1.position - line_1.last_position
+        # line_1.position_2 = line_1.position_2 - line_1.last_position_2
+
+        # line_2.position = line_2.position - line_2.last_position
+        # line_2.position_2 = line_2.position_2 - line_2.last_position_2
+        
+        # line_1.position += (0.5 * delta * n) * (not line_1.anchored)
+        # line_1.position_2 += (0.5 * delta * n) * (not line_1.anchored)
+        # line_2.position -= (0.5 * delta * n) * (not line_2.anchored)
+        # line_2.position_2 -= (0.5 * delta * n) * (not line_2.anchored)    
+        
+        
+        return True
+        

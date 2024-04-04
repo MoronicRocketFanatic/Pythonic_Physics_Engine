@@ -1,17 +1,17 @@
 import pygame
-from pygame import gfxdraw
-import pygame_plus
-import solver
-from solver import Solver, Ball, Line, Square, Triangle 
-import math
-import multiprocessing
-from random import randint
+from pygame import gfxdraw  # noqa: F401
+import pygame_plus # noqa: F401
+import solver # noqa: F401
+from solver import Solver, Ball, Line, Square, Triangle # noqa: F401
+import math # noqa: F401
+import multiprocessing # noqa: F401
+from random import randint # noqa: F401
 
 
 #USER VARIABLES
-WINDOW_WIDTH = 1000
-WINDOW_HEIGHT = 600
-FRAMERATE = 60
+WINDOW_WIDTH = 1920
+WINDOW_HEIGHT = 1080
+FRAMERATE = 100
 
 #Initialize PyGame
 pygame.init()
@@ -25,10 +25,10 @@ engine_clock = pygame.time.Clock()
 delta_time = 1/FRAMERATE #lock it to 1s divided between frames to help stability
 
 #objects
-grav_objects = [Ball(display, WINDOW_WIDTH/2, WINDOW_HEIGHT/2)]
-grav_objects = [Ball(display, WINDOW_WIDTH/2, WINDOW_HEIGHT/2), Line(display, WINDOW_WIDTH/3, WINDOW_HEIGHT/3, WINDOW_WIDTH/3*2, WINDOW_HEIGHT/3)]
+# grav_objects = [Ball(display, WINDOW_WIDTH/2, WINDOW_HEIGHT/2)]
+grav_objects = [Ball(display, WINDOW_WIDTH/2, WINDOW_HEIGHT/2, 30), Line(display, WINDOW_WIDTH/3, WINDOW_HEIGHT/3, WINDOW_WIDTH/3*2, WINDOW_HEIGHT/3), Line(display, WINDOW_WIDTH/3-1, WINDOW_HEIGHT/3, WINDOW_WIDTH/3*2, WINDOW_HEIGHT/3)]
 # no_grav_objects = [Line(display, 0, 0, 0, WINDOW_HEIGHT-1, anchored=True), Line(display, 0, WINDOW_HEIGHT-1, WINDOW_WIDTH-1, WINDOW_HEIGHT-1, anchored=True), Line(display, WINDOW_WIDTH-1, WINDOW_HEIGHT-1, WINDOW_WIDTH-1, 0, anchored=True), Line(display, 0, 0, WINDOW_WIDTH-1, 0, anchored=True)] BOX
-no_grav_objects = [Ball(display, WINDOW_WIDTH/2, WINDOW_HEIGHT/2+100, anchored=True), Ball(display, WINDOW_WIDTH/3, WINDOW_HEIGHT/2+100, anchored=True), Ball(display, WINDOW_WIDTH/3*2, WINDOW_HEIGHT/2+100, anchored=True)]
+no_grav_objects = [Ball(display, WINDOW_WIDTH/2, WINDOW_HEIGHT/2+100, anchored=True), Ball(display, WINDOW_WIDTH/3, WINDOW_HEIGHT/2+100, anchored=True), Ball(display, WINDOW_WIDTH/3*2, WINDOW_HEIGHT/2+100, anchored=True), Line(display, WINDOW_WIDTH/3+20, WINDOW_HEIGHT/4, WINDOW_WIDTH/3+20, WINDOW_HEIGHT/2*1.5, anchored=True)]
 invisible_physics_objects = [] #for invisible walls, etc
 rendered_objects = [] #rendered but without collisions, gui maybe?
 
@@ -36,10 +36,6 @@ phys_solver = Solver(grav_objects, no_grav_objects, gravity=1000)
 
 
 #Functions
-
-
-
-
 
 #MAIN LOOP
 engine_running = True
@@ -56,6 +52,9 @@ while engine_running:
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_UP:
                 grav_objects[0].position[1] -= 1
+                
+            elif event.key == pygame.K_DOWN:
+                grav_objects[0].position[1] += 1
 
             elif event.key == pygame.K_LEFT:
                 grav_objects[0].position[0] -= 1
@@ -68,13 +67,22 @@ while engine_running:
 
     #I should split these onto three other threads for better perf
     for object in grav_objects:
-        object.draw_antialiased_wireframe()
+        if object.draw_antialiased_wireframe():
+            grav_objects.remove(object)
+            del object
+            continue
 
     for object in no_grav_objects:
-        object.draw_antialiased_wireframe()
+        if object.draw_antialiased_wireframe():
+            no_grav_objects.remove(object)
+            del object
+            continue
 
     for object in rendered_objects:
-        object.draw_antialiased_wireframe()
+        if object.draw_antialiased_wireframe():
+            rendered_objects.remove(object)
+            del object
+            continue
 
     pygame.display.flip()
 #EXIT PROGRAM

@@ -40,7 +40,7 @@ class Box():
     
     def draw(self, surface:pygame.Surface = None) -> None:
         """Draws the non-anti-aliased filled box (Surface param is optional)."""
-        if surface == None:
+        if surface is None:
             surface = self.surface
 
         gfxdraw.filled_polygon(surface, self.drawn_points, self.color)
@@ -48,7 +48,7 @@ class Box():
 
     def draw_wireframe(self, surface:pygame.Surface = None) -> None:
         """Draws the non-anti-aliased wireframe box (Surface Param is optional)."""
-        if surface == None:
+        if surface is None:
             surface = self.surface
 
         gfxdraw.polygon(surface, self.drawn_points, self.color)
@@ -56,7 +56,7 @@ class Box():
     
     def draw_antialiased(self, surface:pygame.Surface = None) -> None:
         """Draws the anti-aliased filled box (Surface Param is optional)."""
-        if surface == None:
+        if surface is None:
             surface = self.surface
 
         gfxdraw.aapolygon(surface, self.drawn_points, self.color)
@@ -65,7 +65,7 @@ class Box():
 
     def draw_antialiased_wireframe(self, surface:pygame.Surface = None) -> None:
         """Draws the anti-aliased wireframe box (Surface Param is optional)."""
-        if surface == None:
+        if surface is None:
             surface = self.surface
 
         gfxdraw.aapolygon(surface, self.drawn_points, self.color)
@@ -93,7 +93,7 @@ class Box():
         elif self.rotation < -360:
             self.rotation += 360
 
-        if rotation_center == None:
+        if rotation_center is None:
             rotation_center = (self.x, self.y)
 
         for point in range(len(self.points)):
@@ -127,7 +127,7 @@ class Circle():
     
     def draw(self, surface:pygame.Surface = None) -> None:
         """Draws the non-anti-aliased filled circle (Surface param is optional)."""
-        if surface == None:
+        if surface is None:
             surface = self.surface
 
         gfxdraw.filled_circle(surface, self.drawn_xy[0], self.drawn_xy[1], self.radius, self.color)
@@ -135,7 +135,7 @@ class Circle():
 
     def draw_wireframe(self, surface:pygame.Surface = None) -> None:
         """Draws the non-anti-aliased wireframe circle (Surface Param is optional)."""
-        if surface == None:
+        if surface is None:
             surface = self.surface
 
         gfxdraw.aacircle(surface, self.drawn_xy[0], self.drawn_xy[1], self.radius, self.color)
@@ -143,7 +143,7 @@ class Circle():
     
     def draw_antialiased(self, surface:pygame.Surface = None) -> None:
         """Draws the anti-aliased filled circle (Surface Param is optional)."""
-        if surface == None:
+        if surface is None:
             surface = self.surface
 
         gfxdraw.aacircle(surface, self.drawn_xy[0], self.drawn_xy[1], self.radius, self.color)
@@ -152,7 +152,7 @@ class Circle():
 
     def draw_antialiased_wireframe(self, surface:pygame.Surface = None) -> None:
         """Draws the anti-aliased wireframe circle (Surface Param is optional)."""
-        if surface == None:
+        if surface is None:
             surface = self.surface
 
         gfxdraw.aacircle(surface, self.drawn_xy[0], self.drawn_xy[1], self.radius, self.color)
@@ -176,7 +176,7 @@ class Circle():
         elif self.rotation < -360:
             self.rotation += 360
 
-        if rotation_center == None:
+        if rotation_center is None:
             rotation_center = (self.x, self.y)
 
 
@@ -255,7 +255,7 @@ class Procedural_Polygon():
 
     def draw(self, surface:pygame.Surface = None) -> None:
         """Draws the non-anti-aliased filled polygon (Surface param is optional)."""
-        if surface == None:
+        if surface is None:
             surface = self.surface
 
         gfxdraw.filled_polygon(surface, self.drawn_points, self.color)
@@ -263,7 +263,7 @@ class Procedural_Polygon():
 
     def draw_wireframe(self, surface:pygame.Surface = None) -> None:
         """Draws the non-anti-aliased wireframe polygon (Surface Param is optional)."""
-        if surface == None:
+        if surface is None:
             surface = self.surface
 
         gfxdraw.polygon(surface, self.drawn_points, self.color)
@@ -271,7 +271,7 @@ class Procedural_Polygon():
     
     def draw_antialiased(self, surface:pygame.Surface = None) -> None:
         """Draws the anti-aliased filled polygon (Surface Param is optional)."""
-        if surface == None:
+        if surface is None:
             surface = self.surface
 
         gfxdraw.aapolygon(surface, self.drawn_points, self.color)
@@ -280,7 +280,7 @@ class Procedural_Polygon():
 
     def draw_antialiased_wireframe(self, surface:pygame.Surface = None) -> None:
         """Draws the anti-aliased wireframe polygon (Surface Param is optional)."""
-        if surface == None:
+        if surface is None:
             surface = self.surface
 
         gfxdraw.aapolygon(surface, self.drawn_points, self.color)
@@ -300,7 +300,7 @@ class Procedural_Polygon():
         elif self.rotation < -360:
             self.rotation += 360
 
-        if rotation_center == None:
+        if rotation_center is None:
             rotation_center = (self.x, self.y)
 
         self.calculate_points()
@@ -344,7 +344,7 @@ class Custom_Polygon():
 
     def draw(self, surface:pygame.Surface = None) -> None:
         """Draws the non-anti-aliased filled polygon (Surface param is optional)."""
-        if surface == None:
+        if surface is None:
             surface = self.surface
 
         gfxdraw.filled_polygon(surface, self.drawn_points, self.color)
@@ -352,7 +352,7 @@ class Custom_Polygon():
 
     def draw_wireframe(self, surface:pygame.Surface = None) -> None:
         """Draws the non-anti-aliased wireframe polygon (Surface Param is optional)."""
-        if surface == None:
+        if surface is None:
             surface = self.surface
 
         gfxdraw.polygon(surface, self.drawn_points, self.color)
@@ -360,7 +360,7 @@ class Custom_Polygon():
     
     def draw_antialiased(self, surface:pygame.Surface = None) -> None:
         """Draws the anti-aliased filled polygon (Surface Param is optional)."""
-        if surface == None:
+        if surface is None:
             surface = self.surface
 
         gfxdraw.aapolygon(surface, self.drawn_points, self.color)
@@ -369,7 +369,7 @@ class Custom_Polygon():
 
     def draw_antialiased_wireframe(self, surface:pygame.Surface = None) -> None:
         """Draws the anti-aliased wireframe polygon (Surface Param is optional)."""
-        if surface == None:
+        if surface is None:
             surface = self.surface
 
         gfxdraw.aapolygon(surface, self.drawn_points, self.color)
@@ -387,7 +387,7 @@ class Custom_Polygon():
         elif self.rotation < -360:
             self.rotation += 360
 
-        if rotation_center == None:
+        if rotation_center is None:
             rotation_center = (self.x, self.y)
 
         for point in range(len(self.points)):
