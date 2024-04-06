@@ -26,9 +26,9 @@ delta_time = 1/FRAMERATE #lock it to 1s divided between frames to help stability
 
 #objects
 # grav_objects = [Ball(display, WINDOW_WIDTH/2, WINDOW_HEIGHT/2)]
-grav_objects = [Ball(display, WINDOW_WIDTH/2, WINDOW_HEIGHT/2, 30), Line(display, WINDOW_WIDTH/3, WINDOW_HEIGHT/3, WINDOW_WIDTH/3*2, WINDOW_HEIGHT/3), Line(display, WINDOW_WIDTH/3-1, WINDOW_HEIGHT/3, WINDOW_WIDTH/3*2, WINDOW_HEIGHT/3)]
+grav_objects = [Ball(display, WINDOW_WIDTH/2, WINDOW_HEIGHT/2, 30), Line(display, WINDOW_WIDTH/3, WINDOW_HEIGHT/3, WINDOW_WIDTH/3*2, WINDOW_HEIGHT/3), Line(display, WINDOW_WIDTH/3-10, WINDOW_HEIGHT/3, WINDOW_WIDTH/3*2, WINDOW_HEIGHT/3)]
 # no_grav_objects = [Line(display, 0, 0, 0, WINDOW_HEIGHT-1, anchored=True), Line(display, 0, WINDOW_HEIGHT-1, WINDOW_WIDTH-1, WINDOW_HEIGHT-1, anchored=True), Line(display, WINDOW_WIDTH-1, WINDOW_HEIGHT-1, WINDOW_WIDTH-1, 0, anchored=True), Line(display, 0, 0, WINDOW_WIDTH-1, 0, anchored=True)] BOX
-no_grav_objects = [Ball(display, WINDOW_WIDTH/2, WINDOW_HEIGHT/2+100, anchored=True), Ball(display, WINDOW_WIDTH/3, WINDOW_HEIGHT/2+100, anchored=True), Ball(display, WINDOW_WIDTH/3*2, WINDOW_HEIGHT/2+100, anchored=True), Line(display, WINDOW_WIDTH/3+20, WINDOW_HEIGHT/4, WINDOW_WIDTH/3+20, WINDOW_HEIGHT/2*1.5, anchored=True)]
+no_grav_objects = [Ball(display, WINDOW_WIDTH/2, WINDOW_HEIGHT/2+100, anchored=True), Ball(display, WINDOW_WIDTH/3, WINDOW_HEIGHT/2+100, anchored=True), Ball(display, WINDOW_WIDTH/3*2, WINDOW_HEIGHT/2+100, anchored=True), Line(display, WINDOW_WIDTH/3-20, WINDOW_HEIGHT/4, WINDOW_WIDTH/3-20, WINDOW_HEIGHT/2*1.5, anchored=True)]
 invisible_physics_objects = [] #for invisible walls, etc
 rendered_objects = [] #rendered but without collisions, gui maybe?
 
@@ -65,13 +65,13 @@ while engine_running:
     phys_solver.update(delta_time)
 
 
-    #I should split these onto three other threads for better perf
+    #I should split these onto three other threads for better perf?
     for object in grav_objects:
         if object.draw_antialiased_wireframe():
             grav_objects.remove(object)
             del object
             continue
-
+    
     for object in no_grav_objects:
         if object.draw_antialiased_wireframe():
             no_grav_objects.remove(object)

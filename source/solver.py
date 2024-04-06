@@ -85,6 +85,7 @@ class Line(PhysicsObject):
         super().__init__(surface, x, y, color, rotation, rotation_center, permanent_rotation, anchored)
         self.position_2 = Vector2(x_2, y_2)
         self.last_position_2 = Vector2(x_2, y_2)
+        self.dir = self.position_2 - self.position
 
 
     def update_position(self, delta_time: float) -> None:
@@ -291,18 +292,20 @@ class Solver():
             intersect_distance_1 = ((x_4-x_3)*(y_1-y_3) - (y_4-y_3)*(x_1-x_3)) / ((y_4-y_3)*(x_2-x_1) - (x_4-x_3)*(y_2-y_1))
             intersect_distance_2 = ((x_2-x_1)*(y_1-y_3) - (y_2-y_1)*(x_1-x_3)) / ((y_4-y_3)*(x_2-x_1) - (x_4-x_3)*(y_2-y_1))
         except ZeroDivisionError:
-            line_1.position[1] -= 1
-            line_1.position_2[1] -= 1
-            line_2.position[1] += 1
-            line_2.position_2[1] += 1
-            # print("parallel")
+            if (self.line_on_point(line_2, line_1.position)) and (self.line_on_point(line_2, line_1.position_2)):
+                line_1.position[1] += 0.0000005
+                line_1.position_2[1] += 0.0000005
+                line_2.position[1] -= 0.0000005
+                line_2.position_2[1] -= 0.0000005
+                print("parallel")
             return True
         
         # else:
         #     print("parallel")
         #     return True
         
-        
+        # line_1_coefficients = [(y_1-y_2), (x_2-x_1), (x_1*y_2-x_2-y_1)]
+        # line_1_coefficients = [(y_1-y_2), (x_2-x_1), (x_1*y_2-x_2-y_1)]
         if (intersect_distance_1 < 0 or intersect_distance_1 > 1) or (intersect_distance_2 < 0  or intersect_distance_2 > 1):
             return False
         
@@ -315,6 +318,20 @@ class Solver():
         #     n = collision_axis / intersect_distance_1
         # except ZeroDivisionError:
         #     n = Vector2()
+        
+        line_1.dir = line_1.position_2 - line_1.position #figure out the directions of lines
+        line_2.dir = line_2.position_2 - line_2.position
+        
+        line_1.position = line_1.position + intersect_distance_1 * line_1.dir *(not line_1.anchored) #distance along the line * the line direction + the original point
+        line_1.position_2 = line_1.position_2 + intersect_distance_1 * line_1.dir *(not line_1.anchored)
+        line_2.position = line_2.position + intersect_distance_2 * line_2.dir *(not line_2.anchored)
+        line_2.position_2 = line_2.position_2 + intersect_distance_2 * line_2.dir *(not line_2.anchored)
+        
+        
+        # line_1.position += intersect_distance_1
+        # line_1.position_2 += intersect_distance_1
+        # line_2.position += intersect_distance_2
+        # line_2.position_2 += intersect_distance_2
         
         # delta = None
         # line_1.position = line_1.position - line_1.last_position
