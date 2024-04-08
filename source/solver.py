@@ -406,10 +406,10 @@ class Solver():
         line_1.segment_vector = line_1.position_2 - line_1.position #figure out the directions of lines
         line_2.segment_vector = line_2.position_2 - line_2.position
         
-        line_1.position = line_1.position + (intersect_distance_1 * .5) * line_1.dir *(not line_1.anchored) #distance along the line * the line direction + the original point
-        line_1.position_2 = line_1.position_2 + (intersect_distance_1 * .5) * line_1.dir *(not line_1.anchored)
-        line_2.position = line_2.position - (intersect_distance_2 * .5) * line_2.dir *(not line_2.anchored) #same as the other but minus
-        line_2.position_2 = line_2.position_2 - (intersect_distance_2 * .5) * line_2.dir *(not line_2.anchored)
+        line_1.position = line_1.position + (intersect_distance_1 * .5) * line_1.segment_vector *(not line_1.anchored) #distance along the line * the line direction + the original point
+        line_1.position_2 = line_1.position_2 + (intersect_distance_1 * .5) * line_1.segment_vector *(not line_1.anchored)
+        line_2.position = line_2.position - (intersect_distance_2 * .5) * line_2.segment_vector *(not line_2.anchored) #same as the other but minus
+        line_2.position_2 = line_2.position_2 - (intersect_distance_2 * .5) * line_2.segment_vector *(not line_2.anchored)
         
         return True
         
