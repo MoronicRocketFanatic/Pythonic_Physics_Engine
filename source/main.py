@@ -1,4 +1,5 @@
 import pygame
+from pygame import Vector2 # noqa: F401
 from pygame import gfxdraw  # noqa: F401
 import pygame_plus # noqa: F401
 import solver # noqa: F401
@@ -27,10 +28,10 @@ delta_time = 1/FRAMERATE #lock it to 1s divided between frames to help stability
 #objects
 # grav_objects = [Ball(display, WINDOW_WIDTH/2, WINDOW_HEIGHT/2)]
 # grav_objects = [Ball(display, WINDOW_WIDTH/2, WINDOW_HEIGHT/2-100, 30), Line(display, WINDOW_WIDTH/3, WINDOW_HEIGHT/2, WINDOW_WIDTH/3*2, WINDOW_HEIGHT/2), Line(display, WINDOW_WIDTH/3+50, WINDOW_HEIGHT/2-1000, WINDOW_WIDTH/3+50, WINDOW_HEIGHT/2-100)]
-grav_objects = [Ball(display, WINDOW_WIDTH/2, WINDOW_HEIGHT/2-100, 30), Line(display, WINDOW_WIDTH/3, WINDOW_HEIGHT/2, WINDOW_WIDTH/3*2, WINDOW_HEIGHT/2)]
+grav_objects = [Ball(display, Vector2(WINDOW_WIDTH/2, WINDOW_HEIGHT/2-100), 30), Line(display, Vector2(WINDOW_WIDTH/3, WINDOW_HEIGHT/2), Vector2(WINDOW_WIDTH/3*2, WINDOW_HEIGHT/2))]
 # no_grav_objects = [Line(display, 0, 0, 0, WINDOW_HEIGHT-1, anchored=True), Line(display, 0, WINDOW_HEIGHT-1, WINDOW_WIDTH-1, WINDOW_HEIGHT-1, anchored=True), Line(display, WINDOW_WIDTH-1, WINDOW_HEIGHT-1, WINDOW_WIDTH-1, 0, anchored=True), Line(display, 0, 0, WINDOW_WIDTH-1, 0, anchored=True)] BOX
-no_grav_objects = [Ball(display, WINDOW_WIDTH/2, WINDOW_HEIGHT/2+100, anchored=True), Ball(display, WINDOW_WIDTH/3, WINDOW_HEIGHT/2+100, anchored=True), Ball(display, WINDOW_WIDTH/3*2, WINDOW_HEIGHT/2+100, anchored=True), Line(display, WINDOW_WIDTH/3-20, WINDOW_HEIGHT/4, WINDOW_WIDTH/3-20, WINDOW_HEIGHT/2*1.5, anchored=True)]
-not_mouse_objects = [Line(display, 0, 0, 0, WINDOW_HEIGHT-1, anchored=True), Line(display, 0, WINDOW_HEIGHT-1, WINDOW_WIDTH-1, WINDOW_HEIGHT-1, anchored=True), Line(display, WINDOW_WIDTH-1, WINDOW_HEIGHT-1, WINDOW_WIDTH-1, 0, anchored=True), Line(display, 0, 0, WINDOW_WIDTH-1, 0, anchored=True)]
+no_grav_objects = [Ball(display, Vector2(WINDOW_WIDTH/2, WINDOW_HEIGHT/2+100), anchored=True), Ball(display, Vector2(WINDOW_WIDTH/3, WINDOW_HEIGHT/2+100), anchored=True), Ball(display, Vector2(WINDOW_WIDTH/3*2, WINDOW_HEIGHT/2+100), anchored=True), Line(display, Vector2(WINDOW_WIDTH/3-20, WINDOW_HEIGHT/4), Vector2(WINDOW_WIDTH/3-20, WINDOW_HEIGHT/2*1.5), anchored=True)]
+not_mouse_objects = [Line(display, Vector2(0, 0), Vector2(0, WINDOW_HEIGHT-1), anchored=True), Line(display, Vector2(0, WINDOW_HEIGHT-1), Vector2(WINDOW_WIDTH-1, WINDOW_HEIGHT-1), anchored=True), Line(display, Vector2(WINDOW_WIDTH-1, WINDOW_HEIGHT-1), Vector2(WINDOW_WIDTH-1, 0), anchored=True), Line(display, Vector2(0, 0), Vector2(WINDOW_WIDTH-1, 0), anchored=True)]
 invisible_physics_objects = [] #for invisible walls, etc
 rendered_objects = [] #rendered but without collisions, gui maybe?
 
@@ -56,23 +57,19 @@ while engine_running:
             engine_running = False
             print("Attempting exit...")
 
-
-        elif event.type == pygame.MOUSEBUTTONDOWN:
+        elif event.type == pygame.MOUSEBUTTONDOWN: #Draw start
             mouse_pos = pygame.mouse.get_pos()
             temp_start = pygame.Vector2(mouse_pos[0], mouse_pos[1])
             drawing = True
         
-        elif event.type == pygame.MOUSEBUTTONUP:
+        elif event.type == pygame.MOUSEBUTTONUP: #Draw finish
             mouse_pos = pygame.mouse.get_pos()
             temp_end = pygame.Vector2(mouse_pos[0], mouse_pos[1])
-            mouse_objects.append(Line(display, temp_start[0], temp_start[1], temp_end[0], temp_end[1], anchored=False))
+            mouse_objects.append(Line(display, Vector2(temp_start[0], temp_start[1]), Vector2(temp_end[0], temp_end[1]), anchored=False))
             drawing = False
-            
-            
-        
         
         elif event.type == pygame.KEYDOWN:
-            if event.key == pygame.K_UP:
+            if event.key == pygame.K_UP: #Manuever "player"
                 grav_objects[0].position[1] -= 1
                 
             elif event.key == pygame.K_DOWN:
@@ -84,14 +81,16 @@ while engine_running:
             elif event.key == pygame.K_RIGHT:
                 grav_objects[0].position[0] += 1
             
-            elif event.key == pygame.K_p:
-                print(mouse_objects)
+            elif event.key == pygame.K_p: #print drawn objects for copying
+                temp_list = []
                 for line in mouse_objects:
-                    print(f"Start: {line.position[0]}, {line.position[1]} | End: {line.position_2[0]}, {line.position_2[1]}")
+                    if type(line) == Line:
+                        temp_list.append(f"Line(display, Vector2({line.position[0]}, {line.position[1]}), Vector2({line.position_2[0]}, {line.position_2[1]}), anchored={line.anchored}")
+                print(temp_list)
                     
             elif event.key == pygame.K_1:
                 mouse_pos = pygame.mouse.get_pos()
-                mouse_objects.append(Ball(display, mouse_pos[0], mouse_pos[1], 20))
+                mouse_objects.append(Ball(display, Vector2(mouse_pos[0], mouse_pos[1]), 20))
                 
         
     no_grav_objects = not_mouse_objects + mouse_objects
@@ -101,27 +100,13 @@ while engine_running:
 
     #I should split these onto three other threads for better perf?
     for object in grav_objects:
-        if object.draw_antialiased_wireframe():
-            grav_objects.remove(object)
-            del object
-            continue
+        object.draw_antialiased_wireframe()
     
     for object in no_grav_objects:
-        if object.draw_antialiased_wireframe():
-            no_grav_objects.remove(object)
-            try:
-                not_mouse_objects.remove(object)
-            except ValueError:
-                mouse_objects.remove(object)
-
-            del object
-            continue
+        object.draw_antialiased_wireframe()
 
     for object in rendered_objects:
-        if object.draw_antialiased_wireframe():
-            rendered_objects.remove(object)
-            del object
-            continue
+        object.draw_antialiased_wireframe()
         
     if drawing:
         mouse_pos = pygame.mouse.get_pos()

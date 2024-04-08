@@ -1,40 +1,38 @@
+from time import perf_counter   # noqa: F401
 import pygame
 from pygame import Vector2
 from pygame import gfxdraw
-import pygame_plus  # noqa: F401
 import math
 
-
+# start = perf_counter()
+# print(f"""Function time: (secs): {perf_counter() - start} (millisecs): {(perf_counter() - start)*1000}""")
 class PhysicsObject():
     """Main branch for physics objects to specialize off into."""
 
-    def __init__(self, surface:pygame.Surface, x:int = 0, y:int = 0, color:pygame.Color = (200, 200, 200), rotation:int = 0, rotation_center:Vector2 = Vector2(0,0), permanent_rotation:int = 0, anchored:bool = False) -> None:
-        """_summary_
+    def __init__(self, surface:pygame.Surface, position:Vector2, color:pygame.Color = (200, 200, 200), anchored:bool = False) -> None:
+        """Main physics object class for others to inherit.
 
         Args:
-            surface (pygame.Surface): _description_
-            x (int, optional): _description_. Defaults to 0.
-            y (int, optional): _description_. Defaults to 0.
-            color (pygame.Color, optional): _description_. Defaults to (200, 200, 200).
-            rotation (int, optional): _description_. Defaults to 0.
-            rotation_center (Vector2, optional): _description_. Defaults to Vector2(0,0).
-            permanent_rotation (int, optional): _description_. Defaults to 0.
-            anchored (bool, optional): _description_. Defaults to False.
+            surface (pygame.Surface): Surface to draw onto.
+            position (Vector2): Center of the object.
+            color (pygame.Color, optional): Color of the object. Defaults to (200, 200, 200) (light gray).
+            anchored (bool, optional): If the object is anchored into place or not. Defaults to False.
         """        
-        self.surface = surface
-
-        self.position = Vector2(x, y)
-        self.last_position = Vector2(x, y)
-        self.rotation = rotation
-        self.rotation_center = rotation_center
-        self.permanent_rotation = permanent_rotation
+        self.position = position
+        self.last_position = position
         self.anchored = anchored
 
+        self.surface = surface
         self.color = color
         self.acceleration = Vector2(0,0)
 
 
     def update_position(self, delta_time: float) -> None:
+        """Updates the position of the object.
+
+        Args:
+            delta_time (float): The amount of time passed since this was last called.
+        """        
 
         self.displacement = self.position - self.last_position
 
@@ -47,6 +45,11 @@ class PhysicsObject():
 
 
     def accelerate(self, acceleration:Vector2) -> None:
+        """Adds to the object's current acceleration force.
+
+        Args:
+            acceleration (Vector2): Amount of acceleration.
+        """        
         """Use to accelerate an object"""
         self.acceleration += acceleration
 
@@ -55,22 +58,36 @@ class PhysicsObject():
 class Ball(PhysicsObject):
     """And he said, "let there be balls!" and there was balls. The simplest and easiest to compute."""
 
-    def __init__(self, surface: pygame.Surface, x: int = 0, y: int = 0, radius:float = 10, color: pygame.Color = (200, 200, 200), rotation: int = 0, rotation_center: Vector2 = Vector2(0, 0), anchored:bool = False) -> None:
-        super().__init__(surface, x, y, color, rotation, rotation_center, 0, anchored)
+    def __init__(self, surface: pygame.Surface, position:Vector2, radius:float = 10, color: pygame.Color = (200, 200, 200), anchored:bool = False) -> None:
+        """Balls, a simple and robust collision mesh.
 
+        Args:
+            surface (pygame.Surface): Surface to draw onto.
+            position (Vector2): Center of the ball.
+            radius (float, optional): Radius of the ball. Defaults to 10.
+            color (pygame.Color, optional): Color of the ball. Defaults to (200, 200, 200) (light gray).
+            anchored (bool, optional): If the ball is anchored into place or not. Defaults to False.
+        """        
+        super().__init__(surface, position, color, anchored)
         self.radius = radius
-        # self.render = pygame_plus.Circle(self.x, self.y, self.radius, self.surface, self.color, self.rotation)
 
 
     def draw_antialiased_wireframe(self) -> bool:
+        """Draws the antialiased wireframe of the object.
+
+        Returns:
+            bool: Returns if the object was too far out in the case of an overflow error.
+        """        
         try:
             gfxdraw.aacircle(self.surface, int(self.position[0]), int(self.position[1]), self.radius, self.color)
         except OverflowError:
-            print(f"OBJECT KILLED: {self}")
+            print(f"OBJECT [{self}] OUT OF BOUNDS, MOVING TO 0, 0 AND KILLING VELOCITY.")
+            
+            self.position = Vector2(0, 0)
+            self.last_position = Vector2(0, 0)
+            
+            gfxdraw.aacircle(self.surface, int(self.position[0]), int(self.position[1]), self.radius, self.color)
             return True
-        # self.render.update(self.position[0], self.position[1], self.radius)
-        # self.render.color = self.color
-        # self.render.draw_antialiased_wireframe()
 
     
     
@@ -80,15 +97,24 @@ class Ball(PhysicsObject):
 class Line(PhysicsObject):
     """Lines of..."""
 
-    def __init__(self, surface: pygame.Surface, x: int = 0, y: int = 0, x_2: int = 0, y_2: int = 0, color: pygame.Color = (200, 200, 200), rotation: int = 0, rotation_center: Vector2 = Vector2(0, 0), permanent_rotation: int = 0, anchored: bool = False) -> None:
-        """The x_2 and y_2 are for the second point of the line because lazy"""
-        super().__init__(surface, x, y, color, rotation, rotation_center, permanent_rotation, anchored)
-        self.position_2 = Vector2(x_2, y_2)
-        self.last_position_2 = Vector2(x_2, y_2)
-        self.dir = self.position_2 - self.position
+    def __init__(self, surface: pygame.Surface, position: Vector2, position_2: Vector2, color: pygame.Color = (200, 200, 200), anchored: bool = False) -> None:
+        """Lines, the building blocks of all polygons.
+
+        Args:
+            surface (pygame.Surface): Surface to draw onto.
+            position (Vector2): Start of the line.
+            position_2 (Vector2): End of the line.
+            color (pygame.Color, optional): Color of the line. Defaults to (200, 200, 200) (light gray).
+            anchored (bool, optional): If the line is anchored into place or not. Defaults to False.
+        """        
+        super().__init__(surface, position, color, anchored)
+        self.position_2 = position_2
+        self.last_position_2 = position_2
+        self.segment_vector = self.position_2 - self.position
+        self.normal = self.segment_vector.rotate(90)
 
 
-    def update_position(self, delta_time: float) -> None:
+    def update_position(self, delta_time: float) -> None:  
         self.displacement_2 = self.position_2 - self.last_position_2
 
         self.last_position_2 = self.position_2
@@ -99,11 +125,25 @@ class Line(PhysicsObject):
     
 
     def draw_antialiased_wireframe(self) -> bool:
+        """Draws the antialiased wireframe of the object.
+
+        Returns:
+            bool: Returns if the object was too far out in the case of an overflow error.
+        """        
         try:
             gfxdraw.line(self.surface, int(self.position[0]), int(self.position[1]), int(self.position_2[0]), int(self.position_2[1]), self.color)
         
         except OverflowError:
-            print(f"OBJECT KILLED: {self}")
+            print(f"OBJECT [{self}] OUT OF BOUNDS, MOVING TO 0, 0 AND KILLING VELOCITY.")
+            
+            adjusted_position_2 = self.position_2 - self.position #so that line doesn't lose length or rotation
+            
+            self.position = Vector2(0, 0)
+            self.last_position = Vector2(0, 0)
+            self.position_2 = adjusted_position_2
+            self.last_position_2 = adjusted_position_2
+            
+            gfxdraw.line(self.surface, int(self.position[0]), int(self.position[1]), int(self.position_2[0]), int(self.position_2[1]), self.color)
             return True
 
 
@@ -125,7 +165,14 @@ class Solver():
     """The brain behind the physics engine."""
 
     def __init__(self, grav_objects:list[PhysicsObject], no_grav_objects:list[PhysicsObject], subsets:int = 8, gravity:float = 1000) -> None:
-        """Here we go"""
+        """Here we go
+
+        Args:
+            grav_objects (list[PhysicsObject]): A list of physics objects that have collisions and gravity
+            no_grav_objects (list[PhysicsObject]): A list of physics objects that have collisions
+            subsets (int, optional): The amount of subsets that the Solver will go over in an update() cycle. Defaults to 8.
+            gravity (float, optional): Strength of the gravity, default is similiar to Earth. Defaults to 1000.
+        """        
         self.gravity = gravity
         self.grav_objects = grav_objects
         self.no_grav_objects = no_grav_objects #we need to save as much perf as possible
@@ -136,10 +183,15 @@ class Solver():
 
     
     def update(self, delta_time:float) -> None:
+        """Applies gravity, updates, and solves collisions between all Solver objects.
+
+        Args:
+            delta_time (float): The amount of time passed since last call.
+        """        
         self.time_elapsed += delta_time
         subset_delta_time = delta_time/self.subsets #we need to distribute time accordingly so that time isn't screwed up
+        
         self.all_objects = self.grav_objects + self.no_grav_objects #we need to constantly update this to account for all sorts of changes
-        # subset_grav = self.gravity/self.subsets #Kinda useless from what it seems
 
         for subset in range(self.subsets): #surely there's a better way?
             self.apply_gravity(self.gravity)
@@ -149,21 +201,33 @@ class Solver():
 
     
     def update_positions(self, delta_time:float) -> None:
+        """Updates the positions of all objects in the Solver object.
+
+        Args:
+            delta_time (float): The amount of time passed since last update.
+        """        
         for object in self.all_objects:
             object.update_position(delta_time)
 
 
     def apply_gravity(self, gravity) -> None:
+        """Applies gravity to all gravity affected objects in the Solver object.
+
+        Args:
+            gravity (_type_): The amount of gravity to apply.
+        """        
         """Applies the gravity to all specified gravity objects."""
         for object in self.grav_objects:
             object.accelerate(Vector2(0, gravity))
 
 
     def solve_collisions(self) -> None:
+        """Solves the collisions between all objects stored in the Solver object.
+        """        
         for object_1 in self.all_objects:
             object_1_type = type(object_1)
 
-            for object_2 in self.all_objects: #we improve this via multithreading (split the loop into 4 for 4 seperate threads to work on) and we need a better algorithm
+            for object_2 in self.all_objects: #NEEDS BETTER ALGO. THE CONSTANT LOOP + A LOT OF IFS IS PERFORMANCE HEAVY
                 
                 if object_1 == object_2:
                     continue
@@ -190,6 +254,15 @@ class Solver():
 
     
     def ball_on_ball(self, ball_1:Ball, ball_2:Ball) -> bool:
+        """Resolves and detects collisions between two Ball objects.
+
+        Args:
+            ball_1 (Ball): Ball one of collision.
+            ball_2 (Ball): Ball two of collision.
+
+        Returns:
+            bool: True or false of collision.
+        """        
         collision_axis = ball_1.position - ball_2.position
         distance = collision_axis.length()
         if distance < ball_1.radius + ball_2.radius:
@@ -201,9 +274,19 @@ class Solver():
             ball_1.position += (0.5 * delta * n) * (not ball_1.anchored)
             ball_2.position -= (0.5 * delta * n) * (not ball_2.anchored)
             return True
-
+        return False
+    
 
     def line_on_point(self, line: Line, point: Vector2) -> bool:
+        """Detects collision between a point and a line.
+
+        Args:
+            line (Line): Line of collision.
+            point (Vector2): Point of collision.
+
+        Returns:
+            bool: True or false of collision.
+        """        
         line_length = math.dist(line.position, line.position_2)
         distance_1 = math.dist(point, line.position)
         distance_2 = math.dist(point, line.position_2)
@@ -212,10 +295,19 @@ class Solver():
 
         if ((distance_1 + distance_2) >= (line_length - buffer)) and ((distance_1 + distance_2) >= (line_length + buffer)):
             return True
+        return False
 
     
     def line_on_ball(self, line: Line, ball: Ball) -> bool:
-        
+        """Detects and resolves collision between a Ball and a Line.
+
+        Args:
+            line (Line): Line of collision.
+            ball (Ball): Ball of collision.
+
+        Returns:
+            bool: True or false of collision.
+        """        
         collision_axis = line.position - ball.position
         collision_axis_2 = line.position_2 - ball.position
 
@@ -244,16 +336,16 @@ class Solver():
             ball.position -= (0.5 * delta * n) * (not ball.anchored)
             return True
 
-        # line_x_distance = line.position[0] - line.position_2[0]
-        # line_y_distance = line.position[1] - line.position_2[1]
         line_length = math.dist(line.position, line.position_2)
+        
         dot_product = (((ball.position[0] - line.position[0]) * (line.position_2[0] - line.position[0])) + ((ball.position[1] - line.position[1]) * (line.position_2[1] - line.position[1]))) / math.pow(line_length, 2)
+        
         closest_x = line.position[0] + (dot_product * (line.position_2[0] - line.position[0]))
         closest_y = line.position[1] + (dot_product * (line.position_2[1] - line.position[1]))
         
-        segment_collision = self.line_on_point(line, Vector2(closest_x, closest_y))
-        if segment_collision:
+        if self.line_on_point(line, Vector2(closest_x, closest_y)):
             return False
+        
         ball_x_distance = closest_x - ball.position[0]
         ball_y_distance = closest_y - ball.position[1]
         ball_distance = math.sqrt((ball_x_distance * ball_x_distance) + (ball_y_distance * ball_y_distance))
@@ -269,12 +361,21 @@ class Solver():
             line.position_2 += (0.5 * delta * n) * (not line.anchored)
             ball.position -= (0.5 * delta * n) * (not ball.anchored)
             return True
-
+        
         return False
 
     
     def line_on_line(self, line_1: Line, line_2: Line) -> bool:
-        x_1 = line_1.position[0]
+        """Detects and resolves collision between two Line objects.
+
+        Args:
+            line_1 (Line): Line one of collision.
+            line_2 (Line): Line two of collision.
+
+        Returns:
+            bool: True or false of collision.
+        """        
+        x_1 = line_1.position[0] #set x's and y's for easier experience
         x_2 = line_1.position_2[0]
         y_1 = line_1.position[1]
         y_2 = line_1.position_2[1]
@@ -284,11 +385,7 @@ class Solver():
         y_3 = line_2.position[1]
         y_4 = line_2.position_2[1]
         
-        # intersect_distance_1 = ((x_4-x_3)*(y_1-y_3) - (y_4-y_3)*(x_1-x_3)) / ((y_4-y_3)*(x_2-x_1) - (x_4-x_3)*(y_2-y_1))
-        # intersect_distance_2 = ((x_2-x_1)*(y_1-y_3) - (y_2-y_1)*(x_1-x_3)) / ((y_4-y_3)*(x_2-x_1) - (x_4-x_3)*(y_2-y_1))
-        
-        # if (not self.line_on_point(line_2, line_1.position)) and (not self.line_on_point(line_2, line_1.position_2)):
-        try:
+        try: #avoid parallel lines
             intersect_distance_1 = ((x_4-x_3)*(y_1-y_3) - (y_4-y_3)*(x_1-x_3)) / ((y_4-y_3)*(x_2-x_1) - (x_4-x_3)*(y_2-y_1))
             intersect_distance_2 = ((x_2-x_1)*(y_1-y_3) - (y_2-y_1)*(x_1-x_3)) / ((y_4-y_3)*(x_2-x_1) - (x_4-x_3)*(y_2-y_1))
         except ZeroDivisionError:
@@ -297,56 +394,22 @@ class Solver():
                 line_1.position_2[1] += 0.0000005
                 line_2.position[1] -= 0.0000005
                 line_2.position_2[1] -= 0.0000005
-                print("parallel")
+                # print("parallel")
             return True
         
-        # else:
-        #     print("parallel")
-        #     return True
-        
-        # line_1_coefficients = [(y_1-y_2), (x_2-x_1), (x_1*y_2-x_2-y_1)]
-        # line_1_coefficients = [(y_1-y_2), (x_2-x_1), (x_1*y_2-x_2-y_1)]
-        if (intersect_distance_1 < 0 or intersect_distance_1 > 1) or (intersect_distance_2 < 0  or intersect_distance_2 > 1):
+        if (intersect_distance_1 < 0 or intersect_distance_1 > 1) or (intersect_distance_2 < 0  or intersect_distance_2 > 1): #check for collision
             return False
         
         intersection_position = Vector2(x_1 + (intersect_distance_1 * (x_2 - x_1)), y_1 + (intersect_distance_1 * (y_2 - y_1)))
-        # print(intersect_distance_1)
-        # print(intersect_distance_2)
         gfxdraw.aacircle(line_1.surface, int(intersection_position[0]), int(intersection_position[1]), 5, (255, 0, 0))
         
-        # print(f"intersect {intersection_position}")
-
-        # try:
-        #     n = collision_axis / intersect_distance_1
-        # except ZeroDivisionError:
-        #     n = Vector2()
-        
-        line_1.dir = line_1.position_2 - line_1.position #figure out the directions of lines
-        line_2.dir = line_2.position_2 - line_2.position
+        line_1.segment_vector = line_1.position_2 - line_1.position #figure out the directions of lines
+        line_2.segment_vector = line_2.position_2 - line_2.position
         
         line_1.position = line_1.position + (intersect_distance_1 * .5) * line_1.dir *(not line_1.anchored) #distance along the line * the line direction + the original point
         line_1.position_2 = line_1.position_2 + (intersect_distance_1 * .5) * line_1.dir *(not line_1.anchored)
-        line_2.position = line_2.position - (intersect_distance_2 * .5) * line_2.dir *(not line_2.anchored)
+        line_2.position = line_2.position - (intersect_distance_2 * .5) * line_2.dir *(not line_2.anchored) #same as the other but minus
         line_2.position_2 = line_2.position_2 - (intersect_distance_2 * .5) * line_2.dir *(not line_2.anchored)
-        
-        
-        # line_1.position += intersect_distance_1
-        # line_1.position_2 += intersect_distance_1
-        # line_2.position += intersect_distance_2
-        # line_2.position_2 += intersect_distance_2
-        
-        # delta = None
-        # line_1.position = line_1.position - line_1.last_position
-        # line_1.position_2 = line_1.position_2 - line_1.last_position_2
-
-        # line_2.position = line_2.position - line_2.last_position
-        # line_2.position_2 = line_2.position_2 - line_2.last_position_2
-        
-        # line_1.position += (0.5 * delta * n) * (not line_1.anchored)
-        # line_1.position_2 += (0.5 * delta * n) * (not line_1.anchored)
-        # line_2.position -= (0.5 * delta * n) * (not line_2.anchored)
-        # line_2.position_2 -= (0.5 * delta * n) * (not line_2.anchored)    
-        
         
         return True
         
