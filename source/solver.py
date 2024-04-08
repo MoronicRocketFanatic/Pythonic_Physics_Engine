@@ -310,6 +310,8 @@ class Solver():
             return False
         
         intersection_position = Vector2(x_1 + (intersect_distance_1 * (x_2 - x_1)), y_1 + (intersect_distance_1 * (y_2 - y_1)))
+        # print(intersect_distance_1)
+        # print(intersect_distance_2)
         gfxdraw.aacircle(line_1.surface, int(intersection_position[0]), int(intersection_position[1]), 5, (255, 0, 0))
         
         # print(f"intersect {intersection_position}")
@@ -322,10 +324,10 @@ class Solver():
         line_1.dir = line_1.position_2 - line_1.position #figure out the directions of lines
         line_2.dir = line_2.position_2 - line_2.position
         
-        line_1.position = line_1.position + intersect_distance_1 * line_1.dir *(not line_1.anchored) #distance along the line * the line direction + the original point
-        line_1.position_2 = line_1.position_2 + intersect_distance_1 * line_1.dir *(not line_1.anchored)
-        line_2.position = line_2.position + intersect_distance_2 * line_2.dir *(not line_2.anchored)
-        line_2.position_2 = line_2.position_2 + intersect_distance_2 * line_2.dir *(not line_2.anchored)
+        line_1.position = line_1.position + (intersect_distance_1 * .5) * line_1.dir *(not line_1.anchored) #distance along the line * the line direction + the original point
+        line_1.position_2 = line_1.position_2 + (intersect_distance_1 * .5) * line_1.dir *(not line_1.anchored)
+        line_2.position = line_2.position - (intersect_distance_2 * .5) * line_2.dir *(not line_2.anchored)
+        line_2.position_2 = line_2.position_2 - (intersect_distance_2 * .5) * line_2.dir *(not line_2.anchored)
         
         
         # line_1.position += intersect_distance_1
