@@ -28,10 +28,11 @@ delta_time = 1/FRAMERATE #lock it to 1s divided between frames to help stability
 #objects
 # grav_objects = [Ball(display, WINDOW_WIDTH/2, WINDOW_HEIGHT/2)]
 # grav_objects = [Ball(display, WINDOW_WIDTH/2, WINDOW_HEIGHT/2-100, 30), Line(display, WINDOW_WIDTH/3, WINDOW_HEIGHT/2, WINDOW_WIDTH/3*2, WINDOW_HEIGHT/2), Line(display, WINDOW_WIDTH/3+50, WINDOW_HEIGHT/2-1000, WINDOW_WIDTH/3+50, WINDOW_HEIGHT/2-100)]
-grav_objects = [Ball(display, Vector2(WINDOW_WIDTH/2, WINDOW_HEIGHT/2-100), 30), Line(display, Vector2(WINDOW_WIDTH/3, WINDOW_HEIGHT/2), Vector2(WINDOW_WIDTH/3*2, WINDOW_HEIGHT/2))]
+# grav_objects = [Ball(display, Vector2(WINDOW_WIDTH/2, WINDOW_HEIGHT/2-100), 30), Line(display, Vector2(WINDOW_WIDTH/3, WINDOW_HEIGHT/2), Vector2(WINDOW_WIDTH/3*2, WINDOW_HEIGHT/2))]
+grav_objects = [Ball(display, Vector2(WINDOW_WIDTH/2, WINDOW_HEIGHT/2-100), 30)]
 # no_grav_objects = [Line(display, 0, 0, 0, WINDOW_HEIGHT-1, anchored=True), Line(display, 0, WINDOW_HEIGHT-1, WINDOW_WIDTH-1, WINDOW_HEIGHT-1, anchored=True), Line(display, WINDOW_WIDTH-1, WINDOW_HEIGHT-1, WINDOW_WIDTH-1, 0, anchored=True), Line(display, 0, 0, WINDOW_WIDTH-1, 0, anchored=True)] BOX
 no_grav_objects = [Ball(display, Vector2(WINDOW_WIDTH/2, WINDOW_HEIGHT/2+100), anchored=True), Ball(display, Vector2(WINDOW_WIDTH/3, WINDOW_HEIGHT/2+100), anchored=True), Ball(display, Vector2(WINDOW_WIDTH/3*2, WINDOW_HEIGHT/2+100), anchored=True), Line(display, Vector2(WINDOW_WIDTH/3-20, WINDOW_HEIGHT/4), Vector2(WINDOW_WIDTH/3-20, WINDOW_HEIGHT/2*1.5), anchored=True)]
-not_mouse_objects = [Line(display, Vector2(0, 0), Vector2(0, WINDOW_HEIGHT-1), anchored=True), Line(display, Vector2(0, WINDOW_HEIGHT-1), Vector2(WINDOW_WIDTH-1, WINDOW_HEIGHT-1), anchored=True), Line(display, Vector2(WINDOW_WIDTH-1, WINDOW_HEIGHT-1), Vector2(WINDOW_WIDTH-1, 0), anchored=True), Line(display, Vector2(0, 0), Vector2(WINDOW_WIDTH-1, 0), anchored=True)]
+not_mouse_objects = [Line(display, Vector2(0, 0), Vector2(0, WINDOW_HEIGHT-2), anchored=True), Line(display, Vector2(0, WINDOW_HEIGHT-1), Vector2(WINDOW_WIDTH-1, WINDOW_HEIGHT-1), anchored=True), Line(display, Vector2(WINDOW_WIDTH-1, WINDOW_HEIGHT-1), Vector2(WINDOW_WIDTH-1, 0+1), anchored=True), Line(display, Vector2(0, 0), Vector2(WINDOW_WIDTH-1, 0), anchored=True)]
 invisible_physics_objects = [] #for invisible walls, etc
 rendered_objects = [] #rendered but without collisions, gui maybe?
 

@@ -90,9 +90,6 @@ class Ball(PhysicsObject):
             return True
 
     
-    
-
-
 
 class Line(PhysicsObject):
     """Lines of..."""
@@ -375,6 +372,14 @@ class Solver():
         Returns:
             bool: True or false of collision.
         """        
+        
+        line_1.segment_vector = line_1.position_2 - line_1.position #figure out the directions of lines
+        gfxdraw.aacircle(line_1.surface, int(line_1.segment_vector[0]), int(line_1.segment_vector[1]), 10, (255, 0, 0))
+        
+        line_1.normals = [Vector2((-1*(line_1.position_2[1] - line_1.position[1]), (line_1.position_2[0] - line_1.position[0]))), Vector2(((line_1.position_2[1] - line_1.position[1]), -1*(line_1.position_2[0] - line_1.position[0])))]
+        gfxdraw.aacircle(line_1.surface, int(line_1.normals[0][0]+200), int(line_1.normals[0][1]+200), 5, (0, 255, 0))
+        gfxdraw.aacircle(line_1.surface, int(line_1.normals[1][0]+200), int(line_1.normals[1][1]+200), 5, (0, 0, 255))
+        
         x_1 = line_1.position[0] #set x's and y's for easier experience
         x_2 = line_1.position_2[0]
         y_1 = line_1.position[1]
@@ -401,15 +406,53 @@ class Solver():
             return False
         
         intersection_position = Vector2(x_1 + (intersect_distance_1 * (x_2 - x_1)), y_1 + (intersect_distance_1 * (y_2 - y_1)))
-        gfxdraw.aacircle(line_1.surface, int(intersection_position[0]), int(intersection_position[1]), 5, (255, 0, 0))
+        try:
+            gfxdraw.aacircle(line_1.surface, int(intersection_position[0]), int(intersection_position[1]), 5, (255, 0, 0))
+        except OverflowError:
+            pass
         
         line_1.segment_vector = line_1.position_2 - line_1.position #figure out the directions of lines
-        line_2.segment_vector = line_2.position_2 - line_2.position
         
-        line_1.position = line_1.position + (intersect_distance_1 * .5) * line_1.segment_vector *(not line_1.anchored) #distance along the line * the line direction + the original point
-        line_1.position_2 = line_1.position_2 + (intersect_distance_1 * .5) * line_1.segment_vector *(not line_1.anchored)
-        line_2.position = line_2.position - (intersect_distance_2 * .5) * line_2.segment_vector *(not line_2.anchored) #same as the other but minus
-        line_2.position_2 = line_2.position_2 - (intersect_distance_2 * .5) * line_2.segment_vector *(not line_2.anchored)
+        line_1.normals = [Vector2((-1*(line_1.position_2[1] - line_1.position[1]), (line_1.position_2[0] - line_1.position[0]))), Vector2(((line_1.position_2[1] - line_1.position[1]), -1*(line_1.position_2[0] - line_1.position[0])))]
+        line_2.normals = [Vector2((-1*(line_2.position_2[1] - line_2.position[1]), (line_2.position_2[0] - line_2.position[0]))), Vector2(((line_2.position_2[1] - line_2.position[1]), -1*(line_2.position_2[0] - line_2.position[0])))]
+        # line_1.normal = line_1.segment_vector.rotate(90)
+        # gfxdraw.line(line_1.surface, int(line_1.segment_vector[0]), int(line_1.segment_vector[1]), int(line_1.normal[0]), int(line_1.normal[1]), (0, 255, 0))
+        
+        
+        line_2.segment_vector = line_2.position_2 - line_2.position
+        # gfxdraw.line(line_1.surface, int(line_2.position[0]), int(line_2.position[1]), int(line_2.segment_vector[0]), int(line_2.segment_vector[1]), (255, 0, 0))
+        line_2.normal = line_2.segment_vector.rotate(90)
+        # gfxdraw.line(line_1.surface, int(line_2.segment_vector[0]), int(line_2.segment_vector[1]), int(line_2.normal[0]), int(line_2.normal[1]), (0, 255, 0))
+        
+        # collision_axis = line_2.normal - line_1.normal        
+        
+        # line_1.position += (0.5 * collision_axis) * (not line_1.anchored)
+        # line_1.position_2 += (0.5 * collision_axis) * (not line_1.anchored)
+        # line_2.position += (0.5 * collision_axis) * (not line_2.anchored)
+        # line_2.position_2 += (0.5 * collision_axis) * (not line_2.anchored)
+        
+        
+        
+        # line_1_old_segment_vector = line_1.last_position_2 - line_1.last_position
+        # line_1_velocity_vector = line_1_old_segment_vector - line_1.segment_vector
+        # line_1_velocity_vector = line_1.last_position - line_1.position
+        
+
+        # reflection = line_1_velocity_vector.reflect_ip(line_2.normal)
+        # reflection = Vector2(reflection[0], reflection[1])
+        # final_reflection = reflection.reflect_ip(line_2.segment_vector)
+        # final_reflection = Vector2(final_reflection[0], final_reflection)
+        line_1_velocity_vector = line_1.position - line_1.last_position
+        final_reflection = line_1_velocity_vector
+        final_reflection.reflect_ip(line_2.normals[0])
+        # final_reflection.reflect_ip(line_2.segment_vector)
+                
+        line_1.accelerate(final_reflection*1000000)
+        
+        # line_1.position = line_1.position + (intersect_distance_1 * .5) * line_1.segment_vector *(not line_1.anchored) #distance along the line * the line direction + the original point
+        # line_1.position_2 = line_1.position_2 + (intersect_distance_1 * .5) * line_1.segment_vector *(not line_1.anchored)
+        # line_2.position = line_2.position - (intersect_distance_2 * .5) * line_2.segment_vector *(not line_2.anchored) #same as the other but minus
+        # line_2.position_2 = line_2.position_2 - (intersect_distance_2 * .5) * line_2.segment_vector *(not line_2.anchored)
         
         return True
         
