@@ -94,7 +94,7 @@ while engine_running:
                 mouse_objects.append(Ball(display, Vector2(mouse_pos[0], mouse_pos[1]), 20))
                 
         
-    no_grav_objects = not_mouse_objects + mouse_objects
+    no_grav_objects = not_mouse_objects + mouse_objects + invisible_physics_objects
     phys_solver.no_grav_objects = no_grav_objects
     phys_solver.update(delta_time)
 
