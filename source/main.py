@@ -34,13 +34,14 @@ delta_time = 1/FRAMERATE #lock it to 1s divided between frames to help stability
 # grav_objects =[Ball(display, Vector2(WINDOW_WIDTH/2, WINDOW_HEIGHT/2-100), 30), Line(display, Vector2(249.0, 426.0), Vector2(1011.0, 186.0), anchored=False)]
 # grav_objects =[Ball(display, Vector2(WINDOW_WIDTH/2, WINDOW_HEIGHT/2-100), 30), Polygon(display, Vector2(WINDOW_WIDTH/2, WINDOW_HEIGHT/2)), Ball(display, Vector2(WINDOW_WIDTH/2, WINDOW_HEIGHT/2))]
 # grav_objects = [Ball(display, Vector2(WINDOW_WIDTH/2, WINDOW_HEIGHT/2+200), 10)]
-grav_objects = []
+grav_objects = [Polygon(display, Vector2(WINDOW_WIDTH/3, WINDOW_HEIGHT/3), radius=30, point_amount=3, anchored=False)]
 
 # no_grav_objects = [Line(display, 0, 0, 0, WINDOW_HEIGHT-1, anchored=True), Line(display, 0, WINDOW_HEIGHT-1, WINDOW_WIDTH-1, WINDOW_HEIGHT-1, anchored=True), Line(display, WINDOW_WIDTH-1, WINDOW_HEIGHT-1, WINDOW_WIDTH-1, 0, anchored=True), Line(display, 0, 0, WINDOW_WIDTH-1, 0, anchored=True)] BOX
 no_grav_objects = [Ball(display, Vector2(WINDOW_WIDTH/2, WINDOW_HEIGHT/2+100), anchored=True), Ball(display, Vector2(WINDOW_WIDTH/3, WINDOW_HEIGHT/2+100), anchored=True), Ball(display, Vector2(WINDOW_WIDTH/3*2, WINDOW_HEIGHT/2+100), anchored=True), Line(display, Vector2(WINDOW_WIDTH/3-20, WINDOW_HEIGHT/4), Vector2(WINDOW_WIDTH/3-20, WINDOW_HEIGHT/2*1.5), anchored=True)]
 
 # not_mouse_objects = [Line(display, Vector2(728.0, 959.0), Vector2(1366.0, 511.0), anchored=True)]
-not_mouse_objects = [Polygon(display, Vector2(WINDOW_WIDTH/2-400, WINDOW_HEIGHT/2), radius= 50, point_amount= 4, anchored=True), Polygon(display, Vector2(WINDOW_WIDTH/2, WINDOW_HEIGHT/2), radius= 30, point_amount= 3, anchored=True)]
+not_mouse_objects = [Polygon(display, Vector2(WINDOW_WIDTH/2, WINDOW_HEIGHT/2), radius=50, point_amount=4, anchored=True)]
+# othergon = Polygon(display, Vector2(WINDOW_WIDTH/2, WINDOW_HEIGHT/2), radius=30, point_amount=3, anchored=False)
 
 # not_mouse_objects = [Line(display, Vector2(646.0, 413.0), Vector2(660.0, 832.0), anchored=True)]
 box = [Line(display, Vector2(0, 0), Vector2(0, WINDOW_HEIGHT-2), anchored=True), Line(display, Vector2(0, WINDOW_HEIGHT-1), Vector2(WINDOW_WIDTH-1, WINDOW_HEIGHT-1), anchored=True), Line(display, Vector2(WINDOW_WIDTH-1, WINDOW_HEIGHT-1), Vector2(WINDOW_WIDTH-1, 0+1), anchored=True), Line(display, Vector2(0, 0), Vector2(WINDOW_WIDTH-1, 0), anchored=True)]
@@ -84,20 +85,41 @@ while engine_running:
         
         elif event.type == pygame.KEYDOWN:
             if event.key == pygame.K_UP: #Manuever "player"
-                # grav_objects[0].position[1] -= 1
-                not_mouse_objects[0].position[1] -=.25
+                try:
+                    grav_objects[0].position[1] -= 1
+                except IndexError:
+                    try:
+                        not_mouse_objects[0].position[1] -=.25
+                    except IndexError:
+                        print("index Errror")
+                        continue
                 
             elif event.key == pygame.K_DOWN:
-                # grav_objects[0].position[1] += 1
-                not_mouse_objects[0].position[1] +=.25
+                try:
+                    grav_objects[0].position[1] += 1
+                except IndexError:
+                    try:
+                        not_mouse_objects[0].position[1] +=.25
+                    except IndexError:
+                        continue
 
             elif event.key == pygame.K_LEFT:
-                # grav_objects[0].position[0] -= 1
-                not_mouse_objects[0].position[0] -=.25
+                try:
+                    grav_objects[0].position[0] -= 1
+                except IndexError:
+                    try:
+                        not_mouse_objects[0].position[0] -=.25
+                    except IndexError:
+                        continue
 
             elif event.key == pygame.K_RIGHT:
-                # grav_objects[0].position[0] += 1
-                not_mouse_objects[0].position[0] +=.25
+                try:
+                    grav_objects[0].position[0] += 1
+                except IndexError:
+                    try:
+                        not_mouse_objects[0].position[0] +=.25
+                    except IndexError:
+                        continue
             
             elif event.key == pygame.K_p: #print drawn objects for copying
                 temp_list = []
@@ -126,6 +148,8 @@ while engine_running:
     for object in rendered_objects:
         object.draw_antialiased_wireframe()
         
+    # othergon.draw_antialiased_wireframe()
+        
     if drawing:
         mouse_pos = pygame.mouse.get_pos()
         mouse_vector = Vector2(mouse_pos[0], mouse_pos[1])
@@ -134,6 +158,10 @@ while engine_running:
         normals = [Vector2((-1*(mouse_vector[1] - temp_start[1]), (mouse_vector[0] - temp_start[0]))), Vector2(((mouse_vector[1] - temp_start[1]), -1*(mouse_vector[0] - temp_start[0])))]
         gfxdraw.aacircle(display, int(normals[0][0]), int(normals[0][1]), 10, (255, 165, 0))
         gfxdraw.aacircle(display, int(normals[1][0]), int(normals[1][1]), 10, (0, 165, 255))
+
+
+    print(f"POLYGON 1 |  X: {no_grav_objects[0].position[0]}, Y: {no_grav_objects[0].position[0]}.   |  POINTS:  {no_grav_objects[0].points}")
+    print(f"POLYGON 2 |  X: {grav_objects[0].position[0]}, Y: {grav_objects[0].position[0]}.   |  POINTS:  {grav_objects[0].points}")
 
     pygame.display.flip()
 #EXIT PROGRAM

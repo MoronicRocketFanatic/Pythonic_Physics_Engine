@@ -186,14 +186,17 @@ class Polygon(PhysicsObject):
         self.radius = radius
         self.point_amount = point_amount
         
+        
         if len(self.points) < 3:
+            self.theta = 0
+            self.coordinates = Vector2(0,0)
             self.procedural = True
             for point in range(point_amount): #still don't understand this s##t...  maybe one day...
-                theta = (2*math.pi)/self.point_amount * point
-                #theta = 6.28 / point amount * point_number
-                coordinates = Vector2((position[0] + radius * math.cos(theta)), (position[1] + radius *math.sin(theta))) #magic?
+                self.theta = (2*math.pi)/self.point_amount * point #+ math.radians(360/(self.point_amount*2))
+                #theta = 6.28 / point amount * point_number + fixing rotation
+                self.coordinates = Vector2((self.position[0] + self.radius * math.cos(self.theta)), (self.position[1] + self.radius *math.sin(self.theta))) #magic?
                 # position  =         ( x   +   radius   *   cosine(theta) ), ( y   +   radius   *   sine(theta) ) 
-                self.points.append(coordinates) #append vector
+                self.points.append(self.coordinates) #append vector
         
         else:
             self.procedural = False
@@ -236,26 +239,28 @@ class Polygon(PhysicsObject):
             new_points = []
             for point in self.points:
                 new_points.append(point - self.position)
-                
+            
+            self.points = new_points
             # self.points = deepcopy(new_points)
+            self.position = Vector2(0, 0)
             
             gfxdraw.aapolygon(self.surface, self.points, self.color)
             return True
         
         
     
-    def support_point(self, direction: Vector2) -> Vector2:
-        max_point = Vector2()
-        max_distance = float()
+    # def support_point(self, direction: Vector2) -> Vector2:
+    #     max_point = Vector2()
+    #     max_distance = float()
     
-        for point in self.points:
-            distance = point.dot(direction)
+    #     for point in self.points:
+    #         distance = point.dot(direction)
             
-            if distance > max_distance:
-                max_distance = distance
-                max_point = point
+    #         if distance > max_distance:
+    #             max_distance = distance
+    #             max_point = point
                 
-        return max_point
+    #     return max_point
     
 
 
@@ -363,7 +368,7 @@ class Solver():
 
                 
                 elif (object_1_type == Polygon) and (object_2_type == Polygon):
-                    self.gjk(object_1, object_2)
+                    # self.gjk(object_1, object_2)
                     continue
 
 
