@@ -188,16 +188,17 @@ class Polygon(PhysicsObject):
         
         
         if len(self.points) < 3:
-            self.theta = 0
-            self.coordinates = Vector2(0,0)
+            self.points = []
+            theta = 0
+            coordinates = Vector2(0,0)
             self.procedural = True
             for point in range(point_amount): #still don't understand this s##t...  maybe one day...
-                self.theta = (2*math.pi)/self.point_amount * point #+ math.radians(360/(self.point_amount*2))
+                theta = (2*math.pi)/self.point_amount * point #+ math.radians(360/(self.point_amount*2))
                 #theta = 6.28 / point amount * point_number + fixing rotation
-                self.coordinates = Vector2((self.position[0] + self.radius * math.cos(self.theta)), (self.position[1] + self.radius *math.sin(self.theta))) #magic?
+                coordinates = Vector2((self.position[0] + self.radius * math.cos(theta)), (self.position[1] + self.radius *math.sin(theta))) #magic?
                 # position  =         ( x   +   radius   *   cosine(theta) ), ( y   +   radius   *   sine(theta) ) 
-                self.points.append(self.coordinates) #append vector
-        
+                self.points.append(coordinates) #append vector
+
         else:
             self.procedural = False
         
@@ -206,21 +207,11 @@ class Polygon(PhysicsObject):
         for point in self.points:
             self.point_relatives.append(point - self.position)
         
-        # self.last_points = points
-
-            
             
     def update_position(self, delta_time: float) -> None:
-        
-        # for point in range(len(self.points)):
-        #     point_displacement = self.points[point] - self.last_points[point]
-        #     self.last_points[point] = self.points[point]
-            
-        #     self.points[point] = self.points[point] + point_displacement + self.acceleration * (delta_time*delta_time) #position = position + displacement + acceleration * (delta_time * delta_time)
-        
         super().update_position(delta_time)
         for point in range(len(self.points)):
-            self.points[point] = self.point_relatives[point] + self.position
+            self.points[point] = self.point_relatives[point] + self.position #cheaper than velocity calculation for all points
 
 
     
@@ -249,27 +240,34 @@ class Polygon(PhysicsObject):
         
         
     
-    # def support_point(self, direction: Vector2) -> Vector2:
-    #     max_point = Vector2()
-    #     max_distance = float()
+    def support_point(self, direction: Vector2) -> Vector2:
+        max_point = Vector2()
+        max_distance = float()
     
-    #     for point in self.points:
-    #         distance = point.dot(direction)
+        for point in self.points:
+            distance = point.dot(direction)
             
-    #         if distance > max_distance:
-    #             max_distance = distance
-    #             max_point = point
+            if distance > max_distance:
+                max_distance = distance
+                max_point = point
                 
-    #     return max_point
+        return max_point
     
 
 
 
 
-# class Simplex():
+class Simplex():
     
-#     def __init__(self) -> None:
-#         self.m_size = 0
+    def __init__(self) -> None:
+        self.points = []
+        self.size = 0
+    
+    def push_front(self, point) -> list:
+        self.points.insert(1, point)
+        if self.size > 3:
+            self.points.pop()
+        self.size = min(self.size+1, 3)
         
 
 
@@ -368,7 +366,7 @@ class Solver():
 
                 
                 elif (object_1_type == Polygon) and (object_2_type == Polygon):
-                    # self.gjk(object_1, object_2)
+                    self.gjk(object_1, object_2)
                     continue
 
 
@@ -645,10 +643,10 @@ class Solver():
     
     
     def gjk(self, polygon_1: Polygon, polygon_2: Polygon) -> bool:
-        self.points = []
         support_point = self.find_support(polygon_1, polygon_2, Vector2(1, 0))
         
-        self.points.insert(1, support_point)
+        self.simplex = Simplex()
+        self.simplex.push_front(support_point)
         
         self.direction = -support_point
         
@@ -658,22 +656,23 @@ class Solver():
             
             if (support_point.dot(self.direction) <= 0):
                 looping = False
+                print("false")
                 return False
             
-            self.points.insert(1, support_point)
+            self.simplex.push_front(support_point)
             
-            if (self.next_simplex(self.points, self.direction)):
+            if (self.next_simplex(self.simplex, self.direction)):
                 print("collide")
                 looping = False
                 return True
-            elif len(self.points) > 3:
-                break
+            # elif len(self.points) > 3:
+            #     break
     
     def next_simplex(self, points: list[Vector2], direction: Vector2) -> bool:
-        if len(points) == 2:
+        if self.simplex.size == 2:
             return self.line(points, direction)
-        elif len(points) == 2:
-            return self.triangle(points)
+        elif self.simplex.size == 3:
+            return self.triangle(points, direction)
         
     
     def same_direction(self, direction: Vector2, a_negative: Vector2) -> bool:
@@ -681,8 +680,8 @@ class Solver():
     
     
     def line(self, points: list[Vector2], direction: Vector2) -> bool:
-        a = self.points[0]
-        b = self.points[1]
+        a = self.simplex.points[0]
+        b = self.simplex.points[1]
         
         a_b = b - a
         a_negative = - a
@@ -691,7 +690,7 @@ class Solver():
             self.direction = a_negative
             
         else:
-            self.points = a
+            self.simplex.points = a
             self.direction = a_negative
             
         return False
@@ -700,20 +699,19 @@ class Solver():
     
     
     def triangle(self, points: list[Vector2], direction: Vector2) -> bool:
-        point_1 = self.points[0]
-        point_2 = self.points[1]
-        point_3 = self.points[2]
+        point_1 = self.simplex.points[0]
+        point_2 = self.simplex.points[1]
+        point_3 = self.simplex.points[2]
         
         length_1_2 = point_2 - point_1
-        length_1_3 = point_3 - point_1
+        length_1_3 = point_3 - point_1 
         negative_1 = -point_1
-        
         cross_1_2_3 = length_1_2.cross(length_1_3)
         
  
         if (self.same_direction(cross_1_2_3.dot(length_1_3), negative_1)):
             if (self.same_direction(length_1_3, negative_1)):
-                self.points = [point_1, point_3]
+                self.simplex.points = [point_1, point_3]
                 self.direction = length_1_3.cross(negative_1).cross(length_1_3)
             
 
@@ -733,7 +731,7 @@ class Solver():
 
 
                 else:
-                    self.points = [point_1, point_2, point_3]
+                    self.simplex.points = [point_1, point_2, point_3]
                     self.direction = -cross_1_2_3
                 
             

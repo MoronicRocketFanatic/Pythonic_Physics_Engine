@@ -7,11 +7,11 @@ from solver import Solver, Line, Ball, Polygon # noqa: F401
 import math # noqa: F401
 import multiprocessing # noqa: F401
 from random import randint # noqa: F401
-
+import sys
 
 #USER VARIABLES
-WINDOW_WIDTH = 1920
-WINDOW_HEIGHT = 1080
+WINDOW_WIDTH = int(sys.argv[1])
+WINDOW_HEIGHT = int(sys.argv[2])
 FRAMERATE = 100
 
 #Initialize PyGame
@@ -40,7 +40,8 @@ grav_objects = [Polygon(display, Vector2(WINDOW_WIDTH/3, WINDOW_HEIGHT/3), radiu
 no_grav_objects = [Ball(display, Vector2(WINDOW_WIDTH/2, WINDOW_HEIGHT/2+100), anchored=True), Ball(display, Vector2(WINDOW_WIDTH/3, WINDOW_HEIGHT/2+100), anchored=True), Ball(display, Vector2(WINDOW_WIDTH/3*2, WINDOW_HEIGHT/2+100), anchored=True), Line(display, Vector2(WINDOW_WIDTH/3-20, WINDOW_HEIGHT/4), Vector2(WINDOW_WIDTH/3-20, WINDOW_HEIGHT/2*1.5), anchored=True)]
 
 # not_mouse_objects = [Line(display, Vector2(728.0, 959.0), Vector2(1366.0, 511.0), anchored=True)]
-not_mouse_objects = [Polygon(display, Vector2(WINDOW_WIDTH/2, WINDOW_HEIGHT/2), radius=50, point_amount=4, anchored=True)]
+not_mouse_objects = [Polygon(display, Vector2(WINDOW_WIDTH/2, WINDOW_HEIGHT/2), radius=50, point_amount=5, anchored=True)]
+# not_mouse_objects = [Polygon(display, Vector2(WINDOW_WIDTH/2, WINDOW_HEIGHT/2), [Vector2(1023, 10), Vector2(129, 123), Vector2(1202, 564), Vector2(654, 456)], anchored=True)]
 # othergon = Polygon(display, Vector2(WINDOW_WIDTH/2, WINDOW_HEIGHT/2), radius=30, point_amount=3, anchored=False)
 
 # not_mouse_objects = [Line(display, Vector2(646.0, 413.0), Vector2(660.0, 832.0), anchored=True)]
@@ -86,7 +87,7 @@ while engine_running:
         elif event.type == pygame.KEYDOWN:
             if event.key == pygame.K_UP: #Manuever "player"
                 try:
-                    grav_objects[0].position[1] -= 1
+                    grav_objects[0].position[1] -= .25
                 except IndexError:
                     try:
                         not_mouse_objects[0].position[1] -=.25
@@ -96,7 +97,7 @@ while engine_running:
                 
             elif event.key == pygame.K_DOWN:
                 try:
-                    grav_objects[0].position[1] += 1
+                    grav_objects[0].position[1] += .25
                 except IndexError:
                     try:
                         not_mouse_objects[0].position[1] +=.25
@@ -105,7 +106,7 @@ while engine_running:
 
             elif event.key == pygame.K_LEFT:
                 try:
-                    grav_objects[0].position[0] -= 1
+                    grav_objects[0].position[0] -= .25
                 except IndexError:
                     try:
                         not_mouse_objects[0].position[0] -=.25
@@ -114,7 +115,7 @@ while engine_running:
 
             elif event.key == pygame.K_RIGHT:
                 try:
-                    grav_objects[0].position[0] += 1
+                    grav_objects[0].position[0] += .25
                 except IndexError:
                     try:
                         not_mouse_objects[0].position[0] +=.25
@@ -160,8 +161,8 @@ while engine_running:
         gfxdraw.aacircle(display, int(normals[1][0]), int(normals[1][1]), 10, (0, 165, 255))
 
 
-    print(f"POLYGON 1 |  X: {no_grav_objects[0].position[0]}, Y: {no_grav_objects[0].position[0]}.   |  POINTS:  {no_grav_objects[0].points}")
-    print(f"POLYGON 2 |  X: {grav_objects[0].position[0]}, Y: {grav_objects[0].position[0]}.   |  POINTS:  {grav_objects[0].points}")
+    # print(f"POLYGON 1 |  X: {no_grav_objects[0].position[0]}, Y: {no_grav_objects[0].position[0]}.   |  POINTS:  {no_grav_objects[0].points}")
+    # print(f"POLYGON 2 |  X: {grav_objects[0].position[0]}, Y: {grav_objects[0].position[0]}.   |  POINTS:  {grav_objects[0].points}")
 
     pygame.display.flip()
 #EXIT PROGRAM
