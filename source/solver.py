@@ -311,7 +311,6 @@ class Solver():
             self.solve_collisions()
             self.update_positions(subset_delta_time)
 
-
     
     def update_positions(self, delta_time:float) -> None:
         """Updates the positions of all objects in the Solver object.
@@ -368,8 +367,6 @@ class Solver():
                 elif (object_1_type == Polygon) and (object_2_type == Polygon):
                     self.gjk(object_1, object_2)
                     continue
-
-
 
     
     def ball_on_ball(self, ball_1:Ball, ball_2:Ball) -> bool:
@@ -633,14 +630,12 @@ class Solver():
         # line_2.position = line_2.position - (intersect_distance_2 * .5) * line_2.segment_vector *(not line_2.anchored) #same as the other but minus
         # line_2.position_2 = line_2.position_2 - (intersect_distance_2 * .5) * line_2.segment_vector *(not line_2.anchored)
         
-        return True
-        
+        return True      
         
         
     def find_support(self, polygon_1: Polygon, polygon_2: Polygon, direction: Vector2) -> Vector2:
         return polygon_1.support_point(direction) - polygon_2.support_point(-direction)
-    
-    
+       
     
     def gjk(self, polygon_1: Polygon, polygon_2: Polygon) -> bool:
         support_point = self.find_support(polygon_1, polygon_2, Vector2(1, 0))
@@ -661,12 +656,13 @@ class Solver():
             
             self.simplex.push_front(support_point)
             
-            if (self.next_simplex(self.simplex, self.direction)):
+            if (self.next_simplex(self.simplex.points, self.direction)):
                 print("collide")
                 looping = False
                 return True
             # elif len(self.points) > 3:
             #     break
+
     
     def next_simplex(self, points: list[Vector2], direction: Vector2) -> bool:
         if self.simplex.size == 2:
@@ -680,22 +676,20 @@ class Solver():
     
     
     def line(self, points: list[Vector2], direction: Vector2) -> bool:
-        a = self.simplex.points[0]
-        b = self.simplex.points[1]
+        point_a = points[0]
+        point_b = points[1]
         
-        a_b = b - a
-        a_negative = - a
+        point_a_b = point_b - point_a
+        a_negative = - point_a
         
-        if self.same_direction(a_b, a_negative):
+        if self.same_direction(point_a_b, a_negative):
             self.direction = a_negative
             
         else:
-            self.simplex.points = a
+            self.simplex.points = point_a
             self.direction = a_negative
             
         return False
-    
-    
     
     
     def triangle(self, points: list[Vector2], direction: Vector2) -> bool:
@@ -706,13 +700,13 @@ class Solver():
         length_1_2 = point_2 - point_1
         length_1_3 = point_3 - point_1 
         negative_1 = -point_1
-        cross_1_2_3 = length_1_2.cross(length_1_3)
+        cross_1_2_3 = Vector2(length_1_2.cross(length_1_3))
         
  
-        if (self.same_direction(cross_1_2_3.dot(length_1_3), negative_1)):
+        if (self.same_direction(length_1_3, negative_1)):
             if (self.same_direction(length_1_3, negative_1)):
                 self.simplex.points = [point_1, point_3]
-                self.direction = length_1_3.cross(negative_1).cross(length_1_3)
+                self.direction = length_1_3
             
 
             else:
@@ -721,7 +715,7 @@ class Solver():
         
     
         else:
-            if (self.same_direction(length_1_2.cross(cross_1_2_3), negative_1)):
+            if (self.same_direction(length_1_2, negative_1)):
                 return self.line([point_1, point_2], self.direction)
             
 
