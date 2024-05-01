@@ -26,7 +26,7 @@ engine_clock = pygame.time.Clock()
 delta_time = 1/FRAMERATE #lock it to 1s divided between frames to help stability
 
 #objects
-# grav_objects = [Ball(display, WINDOW_WIDTH/2, WINDOW_HEIGHT/2)]
+grav_objects = [Ball(display, Vector2(WINDOW_WIDTH/2, WINDOW_HEIGHT/2), 30, (255, 0, 0))]
 # grav_objects = [Ball(display, WINDOW_WIDTH/2, WINDOW_HEIGHT/2-100, 30), Line(display, WINDOW_WIDTH/3, WINDOW_HEIGHT/2, WINDOW_WIDTH/3*2, WINDOW_HEIGHT/2), Line(display, WINDOW_WIDTH/3+50, WINDOW_HEIGHT/2-1000, WINDOW_WIDTH/3+50, WINDOW_HEIGHT/2-100)]
 # grav_objects = [Ball(display, Vector2(WINDOW_WIDTH/2, WINDOW_HEIGHT/2-100), 30), Line(display, Vector2(WINDOW_WIDTH/3, WINDOW_HEIGHT/2), Vector2(WINDOW_WIDTH/3*2, WINDOW_HEIGHT/2))]
 
@@ -39,6 +39,7 @@ grav_objects = [Polygon(display, Vector2(WINDOW_WIDTH/3, WINDOW_HEIGHT/3), radiu
 # no_grav_objects = [Line(display, 0, 0, 0, WINDOW_HEIGHT-1, anchored=True), Line(display, 0, WINDOW_HEIGHT-1, WINDOW_WIDTH-1, WINDOW_HEIGHT-1, anchored=True), Line(display, WINDOW_WIDTH-1, WINDOW_HEIGHT-1, WINDOW_WIDTH-1, 0, anchored=True), Line(display, 0, 0, WINDOW_WIDTH-1, 0, anchored=True)] BOX
 no_grav_objects = [Ball(display, Vector2(WINDOW_WIDTH/2, WINDOW_HEIGHT/2+100), anchored=True), Ball(display, Vector2(WINDOW_WIDTH/3, WINDOW_HEIGHT/2+100), anchored=True), Ball(display, Vector2(WINDOW_WIDTH/3*2, WINDOW_HEIGHT/2+100), anchored=True), Line(display, Vector2(WINDOW_WIDTH/3-20, WINDOW_HEIGHT/4), Vector2(WINDOW_WIDTH/3-20, WINDOW_HEIGHT/2*1.5), anchored=True)]
 
+not_mouse_objects = [Ball(display, Vector2(WINDOW_WIDTH/4, WINDOW_HEIGHT/4), 40, (85, 255, 85), True), Ball(display, Vector2(WINDOW_WIDTH/4, WINDOW_HEIGHT/4*3), 40, (85, 255, 85), True), Ball(display, Vector2(WINDOW_WIDTH/4*3, WINDOW_HEIGHT/4*3), 40, (85, 255, 85), True), Ball(display, Vector2(WINDOW_WIDTH/4*3, WINDOW_HEIGHT/4), 40, (85, 255, 85), True)]
 # not_mouse_objects = [Line(display, Vector2(728.0, 959.0), Vector2(1366.0, 511.0), anchored=True)]
 not_mouse_objects = [Polygon(display, Vector2(WINDOW_WIDTH/2, WINDOW_HEIGHT/2), radius=50, point_amount=5, anchored=True)]
 # not_mouse_objects = [Polygon(display, Vector2(WINDOW_WIDTH/2, WINDOW_HEIGHT/2), [Vector2(1023, 10), Vector2(129, 123), Vector2(1202, 564), Vector2(654, 456)], anchored=True)]
@@ -87,38 +88,38 @@ while engine_running:
         elif event.type == pygame.KEYDOWN:
             if event.key == pygame.K_UP: #Manuever "player"
                 try:
-                    grav_objects[0].position[1] -= .25
+                    grav_objects[0].position[1] -= .5
                 except IndexError:
                     try:
-                        not_mouse_objects[0].position[1] -=.25
+                        not_mouse_objects[0].position[1] -=.5
                     except IndexError:
                         print("index Errror")
                         continue
                 
             elif event.key == pygame.K_DOWN:
                 try:
-                    grav_objects[0].position[1] += .25
+                    grav_objects[0].position[1] += .5
                 except IndexError:
                     try:
-                        not_mouse_objects[0].position[1] +=.25
+                        not_mouse_objects[0].position[1] +=.5
                     except IndexError:
                         continue
 
             elif event.key == pygame.K_LEFT:
                 try:
-                    grav_objects[0].position[0] -= .25
+                    grav_objects[0].position[0] -= .5
                 except IndexError:
                     try:
-                        not_mouse_objects[0].position[0] -=.25
+                        not_mouse_objects[0].position[0] -=.5
                     except IndexError:
                         continue
 
             elif event.key == pygame.K_RIGHT:
                 try:
-                    grav_objects[0].position[0] += .25
+                    grav_objects[0].position[0] += .5
                 except IndexError:
                     try:
-                        not_mouse_objects[0].position[0] +=.25
+                        not_mouse_objects[0].position[0] +=.5
                     except IndexError:
                         continue
             

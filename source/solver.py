@@ -12,9 +12,16 @@ import math
 
 
 
+def perpendicular(vector:Vector2) -> Vector2:
+    """Finds the perpendicular of a Vector2, or any point.
 
+    Args:
+        vector (Vector2): Vector2 for perpendicular.
 
-
+    Returns:
+        Vector2: Perpendicular of the inputted vector.
+    """    
+    return Vector2(-vector[1], vector[0])
 
 
 class PhysicsObject():
@@ -493,11 +500,11 @@ class Solver():
         """        
         
         line_1.segment_vector = line_1.position_2 - line_1.position #figure out the directions of lines
-        gfxdraw.aacircle(line_1.surface, int(line_1.segment_vector[0]), int(line_1.segment_vector[1]), 10, (255, 0, 0))
+        # gfxdraw.aacircle(line_1.surface, int(line_1.segment_vector[0]), int(line_1.segment_vector[1]), 10, (255, 0, 0))
         
         line_1.normals = [Vector2((-1*(line_1.position_2[1] - line_1.position[1]), (line_1.position_2[0] - line_1.position[0]))), Vector2(((line_1.position_2[1] - line_1.position[1]), -1*(line_1.position_2[0] - line_1.position[0])))]
-        gfxdraw.aacircle(line_1.surface, int(line_1.normals[0][0]), int(line_1.normals[0][1]), 5, (0, 255, 0))
-        gfxdraw.aacircle(line_1.surface, int(line_1.normals[1][0]), int(line_1.normals[1][1]), 5, (0, 0, 255))
+        # gfxdraw.aacircle(line_1.surface, int(line_1.normals[0][0]), int(line_1.normals[0][1]), 5, (0, 255, 0))
+        # gfxdraw.aacircle(line_1.surface, int(line_1.normals[1][0]), int(line_1.normals[1][1]), 5, (0, 0, 255))
         
         x_1 = line_1.position[0] #set x's and y's for easier experience
         x_2 = line_1.position_2[0]
@@ -638,15 +645,18 @@ class Solver():
        
     
     def gjk(self, polygon_1: Polygon, polygon_2: Polygon) -> bool:
-        support_point = self.find_support(polygon_1, polygon_2, Vector2(1, 0))
+        self.direction = polygon_2.position - polygon_1.position # because it will likely give an extreme point
+        support_point = self.find_support(polygon_1, polygon_2, self.direction)
         
         self.simplex = Simplex()
         self.simplex.push_front(support_point)
         
         self.direction = -support_point
         
+        iteration = 0
         looping = True
-        while looping:
+        while looping and iteration < 100:
+            iteration+=1
             support_point = self.find_support(polygon_1, polygon_2, self.direction)
             
             if (support_point.dot(self.direction) <= 0):
@@ -662,6 +672,8 @@ class Solver():
                 return True
             # elif len(self.points) > 3:
             #     break
+            # else:
+            #     return False
 
     
     def next_simplex(self, points: list[Vector2], direction: Vector2) -> bool:
@@ -700,34 +712,38 @@ class Solver():
         length_1_2 = point_2 - point_1
         length_1_3 = point_3 - point_1 
         negative_1 = -point_1
-        cross_1_2_3 = Vector2(length_1_2.cross(length_1_3))
-        
- 
-        if (self.same_direction(length_1_3, negative_1)):
-            if (self.same_direction(length_1_3, negative_1)):
-                self.simplex.points = [point_1, point_3]
-                self.direction = length_1_3
-            
+        # cross_1_2_3 = Vector2(length_1_2.cross(length_1_3))
+        point_1_2_perpendicular = perpendicular(length_1_2)
+        point_1_3_perpendicular = perpendicular(length_1_3)
 
-            else:
-                return self.line([point_1, point_2], self.direction)
+        if (self.same_direction(point_1_3_perpendicular, negative_1)):
+            # if (self.same_direction(length_1_3, negative_1)):
+            self.simplex.points = [point_1, point_3]
+            self.direction = point_1_3_perpendicular
+            # return self.line([point_1, point_3], point_1_3_perpendicular)
+
+            # else:
+            #     return self.line([point_1, point_2], self.direction)
             
         
     
         else:
-            if (self.same_direction(length_1_2, negative_1)):
-                return self.line([point_1, point_2], self.direction)
-            
+            if (self.same_direction(point_1_2_perpendicular, negative_1)):
+                self.simplex.points = [point_1, point_2]
+                self.direction = point_1_2_perpendicular
+                # return self.line([point_1, point_2], point_1_2_perpendicular)
+
 
             else:
-                if (self.same_direction(cross_1_2_3, negative_1)):
-                    self.direction = cross_1_2_3
+                return True
+                # if (self.same_direction(length_1_2, negative_1)):
+                #     self.direction = length_1_2
 
 
-                else:
-                    self.simplex.points = [point_1, point_2, point_3]
-                    self.direction = -cross_1_2_3
-                
+                # else:
+                #     # self.simplex.points = [point_1, point_2, point_3]
+                #     # self.direction = -length_1_2
+                #     return True
             
         
 
