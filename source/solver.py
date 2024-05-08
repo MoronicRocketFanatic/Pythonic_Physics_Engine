@@ -3,7 +3,7 @@ import pygame
 from pygame import Vector2
 from pygame import gfxdraw
 import math
-# from copy import deepcopy
+from copy import deepcopy
 
 
 # start = perf_counter()
@@ -220,7 +220,6 @@ class Polygon(PhysicsObject):
         for point in range(len(self.points)):
             self.points[point] = self.point_relatives[point] + self.position #cheaper than velocity calculation for all points
 
-
     
     def draw_antialiased_wireframe(self) -> bool:
         """Draws the antialiased wireframe of the object.
@@ -245,11 +244,10 @@ class Polygon(PhysicsObject):
             gfxdraw.aapolygon(self.surface, self.points, self.color)
             return True
         
-        
-    
+           
     def support_point(self, direction: Vector2) -> Vector2:
         max_point = Vector2()
-        max_distance = float()
+        max_distance = float(-99999999999999999999999)
     
         for point in self.points:
             distance = point.dot(direction)
@@ -372,7 +370,14 @@ class Solver():
 
                 
                 elif (object_1_type == Polygon) and (object_2_type == Polygon):
-                    self.gjk(object_1, object_2)
+                    if self.gjk(object_1, object_2):
+                        normal = self.EPA(self.simplex, object_1, object_2)
+                        try:
+                            object_1.position += normal.normalize()
+                            object_2.position -= normal.normalize()
+                        except ValueError:
+                            object_1.position += normal/200000
+                            object_2.position -= normal/200000
                     continue
 
     
@@ -641,22 +646,38 @@ class Solver():
         
         
     def find_support(self, polygon_1: Polygon, polygon_2: Polygon, direction: Vector2) -> Vector2:
-        return polygon_1.support_point(direction) - polygon_2.support_point(-direction)
+        support_1 = polygon_1.support_point(direction)
+        support_2 = polygon_2.support_point(-direction)
+        resultant = support_1 - support_2
+        # print(f"POINT 1: {support_1}  |  POINT 2: {support_2}  |  RESULTANT: {resultant}")
+        return resultant
        
     
     def gjk(self, polygon_1: Polygon, polygon_2: Polygon) -> bool:
         self.direction = polygon_2.position - polygon_1.position # because it will likely give an extreme point
         support_point = self.find_support(polygon_1, polygon_2, self.direction)
         
+        points = []
+        for i in range(360):
+            temp = self.find_support(polygon_1, polygon_2, Vector2(1, 0).rotate(-i))
+            if temp not in points:
+                points.append(Vector2(temp[0] + 960, temp[1] + 540))
+        # print(points)
+        gfxdraw.circle(self.all_objects[0].surface, 960, 540, 2, (0,0,255))
+        gfxdraw.polygon(self.all_objects[0].surface, points, (255, 0, 0))
+        
         self.simplex = Simplex()
         self.simplex.push_front(support_point)
+        
         
         self.direction = -support_point
         
         iteration = 0
         looping = True
-        while looping and iteration < 100:
+        # while looping and iteration < 100:
+        while looping:
             iteration+=1
+            # print(f"SUPPORT: {support_point}")
             support_point = self.find_support(polygon_1, polygon_2, self.direction)
             
             if (support_point.dot(self.direction) <= 0):
@@ -665,6 +686,16 @@ class Solver():
                 return False
             
             self.simplex.push_front(support_point)
+            
+            fake_simplex = deepcopy(self.simplex.points)
+            for point in range(len(fake_simplex)):
+                fake_simplex[point] = Vector2(fake_simplex[point][0] + 960, fake_simplex[point][1] + 540)
+                
+            try:
+                gfxdraw.aapolygon(self.all_objects[0].surface, fake_simplex, (0, 255, 0))
+                pass
+            except ValueError:
+                pass
             
             if (self.next_simplex(self.simplex.points, self.direction)):
                 print("collide")
@@ -681,33 +712,38 @@ class Solver():
             return self.line(points, direction)
         elif self.simplex.size == 3:
             return self.triangle(points, direction)
-        
+        return False
     
     def same_direction(self, direction: Vector2, a_negative: Vector2) -> bool:
         return direction.dot(a_negative) > 0
     
     
     def line(self, points: list[Vector2], direction: Vector2) -> bool:
-        point_a = points[0]
-        point_b = points[1]
+        point_1 = points[0]
+        point_2 = points[1]
+        # gfxdraw.circle(self.all_objects[0].surface, int(point_1[0] + 960), int(point_1[1] + 540), 3, (255, 0, 0))
+        # gfxdraw.circle(self.all_objects[0].surface, int(point_2[0] + 960), int(point_2[1] + 540), 3, (0, 255, 0))        
+        point_1_2 = point_2 - point_1
+        a_negative = - point_1
         
-        point_a_b = point_b - point_a
-        a_negative = - point_a
-        
-        if self.same_direction(point_a_b, a_negative):
+        if self.same_direction(point_1_2, a_negative):
             self.direction = a_negative
             
         else:
-            self.simplex.points = point_a
+            self.simplex.points = point_1
             self.direction = a_negative
             
         return False
     
     
     def triangle(self, points: list[Vector2], direction: Vector2) -> bool:
+        
         point_1 = self.simplex.points[0]
         point_2 = self.simplex.points[1]
         point_3 = self.simplex.points[2]
+        gfxdraw.circle(self.all_objects[0].surface, int(point_1[0] + 960), int(point_1[1] + 540), 3, (255, 0, 0))
+        gfxdraw.circle(self.all_objects[0].surface, int(point_2[0] + 960), int(point_2[1] + 540), 3, (0, 255, 0))
+        gfxdraw.circle(self.all_objects[0].surface, int(point_3[0] + 960), int(point_3[1] + 540), 3, (0, 0, 255))
         
         length_1_2 = point_2 - point_1
         length_1_3 = point_3 - point_1 
@@ -715,22 +751,27 @@ class Solver():
         # cross_1_2_3 = Vector2(length_1_2.cross(length_1_3))
         point_1_2_perpendicular = perpendicular(length_1_2)
         point_1_3_perpendicular = perpendicular(length_1_3)
+        
 
         if (self.same_direction(point_1_3_perpendicular, negative_1)):
+            if (self.same_direction(length_1_3, negative_1)):
+                
             # if (self.same_direction(length_1_3, negative_1)):
-            self.simplex.points = [point_1, point_3]
-            self.direction = point_1_3_perpendicular
+                self.simplex.points = [point_1, point_3]
+                self.direction = point_1_3_perpendicular
             # return self.line([point_1, point_3], point_1_3_perpendicular)
 
-            # else:
-            #     return self.line([point_1, point_2], self.direction)
+            else:
+                return self.line([point_1, point_2], self.direction)
             
         
     
         else:
             if (self.same_direction(point_1_2_perpendicular, negative_1)):
-                self.simplex.points = [point_1, point_2]
-                self.direction = point_1_2_perpendicular
+                return self.line([point_1, point_2], self.direction)
+                # if (self.same_direction(length_1_2, negative_1)):
+                #     self.simplex.points = [point_1, point_2]
+                #     self.direction = point_1_2_perpendicular
                 # return self.line([point_1, point_2], point_1_2_perpendicular)
 
 
@@ -749,3 +790,40 @@ class Solver():
 
         return False
     
+    
+    def EPA(self, polytope:Simplex, polygon_1:Polygon, polygon_2:Polygon):
+        minimum_index = 0
+        minimum_distance = math.inf
+        minimum_normal = Vector2(0,0)
+        
+        while minimum_distance == math.inf:
+            for i in range(polytope.size):
+                j = (i + 1) % polytope.size
+                
+                vertex_i = polytope.points[i]
+                vertex_j = polytope.points[j]
+                
+                vertex_i_j = vertex_j - vertex_i
+                try:
+                    normal = perpendicular(vertex_i_j).normalize()
+                except ValueError:
+                    normal = perpendicular(vertex_i_j)
+                distance = normal.dot(vertex_i)
+                
+                if distance < 0:
+                    distance *= -1
+                    normal *= -1
+                    
+                if distance < minimum_distance:
+                    minimum_distance = distance
+                    minimum_normal = normal
+                    minimum_index = j
+                    
+                support = self.find_support(polygon_1, polygon_2, minimum_normal)
+                small_distance = minimum_normal.dot(support)
+                
+                if abs(small_distance - minimum_distance) > 0.001:
+                    minimum_distance = math.inf
+                    polytope.points.insert(minimum_index, support)
+                    
+        return minimum_normal * (minimum_distance + 0.001)

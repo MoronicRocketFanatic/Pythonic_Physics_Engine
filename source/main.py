@@ -35,6 +35,8 @@ grav_objects = [Ball(display, Vector2(WINDOW_WIDTH/2, WINDOW_HEIGHT/2), 30, (255
 # grav_objects =[Ball(display, Vector2(WINDOW_WIDTH/2, WINDOW_HEIGHT/2-100), 30), Polygon(display, Vector2(WINDOW_WIDTH/2, WINDOW_HEIGHT/2)), Ball(display, Vector2(WINDOW_WIDTH/2, WINDOW_HEIGHT/2))]
 # grav_objects = [Ball(display, Vector2(WINDOW_WIDTH/2, WINDOW_HEIGHT/2+200), 10)]
 grav_objects = [Polygon(display, Vector2(WINDOW_WIDTH/3, WINDOW_HEIGHT/3), radius=30, point_amount=3, anchored=False)]
+grav_objects = []
+
 
 # no_grav_objects = [Line(display, 0, 0, 0, WINDOW_HEIGHT-1, anchored=True), Line(display, 0, WINDOW_HEIGHT-1, WINDOW_WIDTH-1, WINDOW_HEIGHT-1, anchored=True), Line(display, WINDOW_WIDTH-1, WINDOW_HEIGHT-1, WINDOW_WIDTH-1, 0, anchored=True), Line(display, 0, 0, WINDOW_WIDTH-1, 0, anchored=True)] BOX
 no_grav_objects = [Ball(display, Vector2(WINDOW_WIDTH/2, WINDOW_HEIGHT/2+100), anchored=True), Ball(display, Vector2(WINDOW_WIDTH/3, WINDOW_HEIGHT/2+100), anchored=True), Ball(display, Vector2(WINDOW_WIDTH/3*2, WINDOW_HEIGHT/2+100), anchored=True), Line(display, Vector2(WINDOW_WIDTH/3-20, WINDOW_HEIGHT/4), Vector2(WINDOW_WIDTH/3-20, WINDOW_HEIGHT/2*1.5), anchored=True)]
@@ -42,6 +44,9 @@ no_grav_objects = [Ball(display, Vector2(WINDOW_WIDTH/2, WINDOW_HEIGHT/2+100), a
 not_mouse_objects = [Ball(display, Vector2(WINDOW_WIDTH/4, WINDOW_HEIGHT/4), 40, (85, 255, 85), True), Ball(display, Vector2(WINDOW_WIDTH/4, WINDOW_HEIGHT/4*3), 40, (85, 255, 85), True), Ball(display, Vector2(WINDOW_WIDTH/4*3, WINDOW_HEIGHT/4*3), 40, (85, 255, 85), True), Ball(display, Vector2(WINDOW_WIDTH/4*3, WINDOW_HEIGHT/4), 40, (85, 255, 85), True)]
 # not_mouse_objects = [Line(display, Vector2(728.0, 959.0), Vector2(1366.0, 511.0), anchored=True)]
 not_mouse_objects = [Polygon(display, Vector2(WINDOW_WIDTH/2, WINDOW_HEIGHT/2), radius=50, point_amount=5, anchored=True)]
+not_mouse_objects = [Polygon(display, Vector2(WINDOW_WIDTH/3, WINDOW_HEIGHT/3), radius=30, point_amount=3, anchored=False), Polygon(display, Vector2(200, 200), radius=50, point_amount=5, anchored=True)]
+not_mouse_objects = [Polygon(display, Vector2(WINDOW_WIDTH/3, WINDOW_HEIGHT/3), [Vector2(100, 100), Vector2(200, 100), Vector2(200, 200), Vector2(100, 200)], anchored=False), Polygon(display, Vector2(200, 200), [Vector2(300, 400), Vector2(350, 300), Vector2(400, 400)], anchored=True)]
+
 # not_mouse_objects = [Polygon(display, Vector2(WINDOW_WIDTH/2, WINDOW_HEIGHT/2), [Vector2(1023, 10), Vector2(129, 123), Vector2(1202, 564), Vector2(654, 456)], anchored=True)]
 # othergon = Polygon(display, Vector2(WINDOW_WIDTH/2, WINDOW_HEIGHT/2), radius=30, point_amount=3, anchored=False)
 
@@ -91,7 +96,7 @@ while engine_running:
                     grav_objects[0].position[1] -= .5
                 except IndexError:
                     try:
-                        not_mouse_objects[0].position[1] -=.5
+                        not_mouse_objects[0].position[1] -=.25
                     except IndexError:
                         print("index Errror")
                         continue
@@ -101,7 +106,7 @@ while engine_running:
                     grav_objects[0].position[1] += .5
                 except IndexError:
                     try:
-                        not_mouse_objects[0].position[1] +=.5
+                        not_mouse_objects[0].position[1] +=.25
                     except IndexError:
                         continue
 
@@ -110,7 +115,7 @@ while engine_running:
                     grav_objects[0].position[0] -= .5
                 except IndexError:
                     try:
-                        not_mouse_objects[0].position[0] -=.5
+                        not_mouse_objects[0].position[0] -=.25
                     except IndexError:
                         continue
 
@@ -119,7 +124,7 @@ while engine_running:
                     grav_objects[0].position[0] += .5
                 except IndexError:
                     try:
-                        not_mouse_objects[0].position[0] +=.5
+                        not_mouse_objects[0].position[0] +=.25
                     except IndexError:
                         continue
             
