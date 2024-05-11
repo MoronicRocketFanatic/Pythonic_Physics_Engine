@@ -45,7 +45,7 @@ not_mouse_objects = [Ball(display, Vector2(WINDOW_WIDTH/4, WINDOW_HEIGHT/4), 40,
 # not_mouse_objects = [Line(display, Vector2(728.0, 959.0), Vector2(1366.0, 511.0), anchored=True)]
 not_mouse_objects = [Polygon(display, Vector2(WINDOW_WIDTH/2, WINDOW_HEIGHT/2), radius=50, point_amount=5, anchored=True)]
 not_mouse_objects = [Polygon(display, Vector2(WINDOW_WIDTH/3, WINDOW_HEIGHT/3), radius=30, point_amount=3, anchored=False), Polygon(display, Vector2(200, 200), radius=50, point_amount=5, anchored=True)]
-not_mouse_objects = [Polygon(display, Vector2(WINDOW_WIDTH/3, WINDOW_HEIGHT/3), [Vector2(100, 100), Vector2(200, 100), Vector2(200, 200), Vector2(100, 200)], anchored=False), Polygon(display, Vector2(200, 200), [Vector2(300, 400), Vector2(350, 300), Vector2(400, 400)], anchored=True)]
+not_mouse_objects = [Polygon(display, Vector2(150, 150), [Vector2(100, 100), Vector2(200, 100), Vector2(200, 200), Vector2(100, 200)], anchored=False), Polygon(display, Vector2(350, 350), [Vector2(300, 400), Vector2(350, 300), Vector2(400, 400)], anchored=True)]
 
 # not_mouse_objects = [Polygon(display, Vector2(WINDOW_WIDTH/2, WINDOW_HEIGHT/2), [Vector2(1023, 10), Vector2(129, 123), Vector2(1202, 564), Vector2(654, 456)], anchored=True)]
 # othergon = Polygon(display, Vector2(WINDOW_WIDTH/2, WINDOW_HEIGHT/2), radius=30, point_amount=3, anchored=False)

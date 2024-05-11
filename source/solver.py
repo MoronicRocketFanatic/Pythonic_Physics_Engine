@@ -192,7 +192,8 @@ class Polygon(PhysicsObject):
         self.points = points
         self.radius = radius
         self.point_amount = point_amount
-        
+        self.rotation = 0
+        self.motor = 0
         
         if len(self.points) < 3:
             self.points = []
@@ -217,8 +218,21 @@ class Polygon(PhysicsObject):
             
     def update_position(self, delta_time: float) -> None:
         super().update_position(delta_time)
+        self.rotation += self.motor
+        if self.rotation >= 360:
+            self.rotation -= 360
+        elif self.rotation <= -360:
+            self.rotation += 360
+            
+            
         for point in range(len(self.points)):
             self.points[point] = self.point_relatives[point] + self.position #cheaper than velocity calculation for all points
+            temporary_point = self.points[point]
+            self.points[point] = Vector2(int(math.cos(math.radians(self.rotation)) * (temporary_point[0] - self.position[0]) - math.sin(math.radians(self.rotation)) * (temporary_point[1] - self.position[1]) + self.position[0]),int(math.sin(math.radians(self.rotation)) * (temporary_point[0] - self.position[0]) + math.cos(math.radians(self.rotation)) * (temporary_point[1] - self.position[1]) + self.position[1]))
+        
+        # for point in range(len(self.points)):
+
+            # self.points[point][1] = int(math.sin(math.radians(self.rotation)) * (temporary_point[0] - self.position[0]) + math.cos(math.radians(self.rotation)) * (temporary_point[1] - self.position[1]) + self.position[1])
 
     
     def draw_antialiased_wireframe(self) -> bool:
@@ -228,7 +242,10 @@ class Polygon(PhysicsObject):
             bool: Returns if the object was too far out in the case of an overflow error.
         """        
         try:
+            gfxdraw.filled_polygon(self.surface, self.points, self.color)
             gfxdraw.aapolygon(self.surface, self.points, self.color)
+            gfxdraw.aacircle(self.surface, int(self.position[0]), int(self.position[1]), 5, (0, 255, 0))
+
         
         except OverflowError:
             print(f"OBJECT [{self}] OUT OF BOUNDS, MOVING TO 0, 0 AND KILLING VELOCITY.")
@@ -237,9 +254,15 @@ class Polygon(PhysicsObject):
             for point in self.points:
                 new_points.append(point - self.position)
             
-            self.points = new_points
-            # self.points = deepcopy(new_points)
+            # self.points = new_points
+            self.points = deepcopy(new_points)
             self.position = Vector2(0, 0)
+            for point in range(len(self.points)):
+                temporary_point = self.points[point]
+                self.points[point][0] = int(math.cos(math.radians(self.rotation)) * (temporary_point[0] - self.position[0]) - math.sin(math.radians(self.rotation)) * (temporary_point[1] - self.position[1]) + self.position[0])
+                self.points[point][1] = int(math.sin(math.radians(self.rotation)) * (temporary_point[0] - self.position[0]) + math.cos(math.radians(self.rotation)) * (temporary_point[1] - self.position[1]) + self.position[1])
+
+
             
             gfxdraw.aapolygon(self.surface, self.points, self.color)
             return True
@@ -247,7 +270,7 @@ class Polygon(PhysicsObject):
            
     def support_point(self, direction: Vector2) -> Vector2:
         max_point = Vector2()
-        max_distance = float(-99999999999999999999999)
+        max_distance = float(-999999999999999999999999999999999999999)
     
         for point in self.points:
             distance = point.dot(direction)
@@ -692,7 +715,7 @@ class Solver():
                 fake_simplex[point] = Vector2(fake_simplex[point][0] + 960, fake_simplex[point][1] + 540)
                 
             try:
-                gfxdraw.aapolygon(self.all_objects[0].surface, fake_simplex, (0, 255, 0))
+                # gfxdraw.polygon(self.all_objects[0].surface, fake_simplex, (0, 255, 0))
                 pass
             except ValueError:
                 pass
@@ -741,9 +764,9 @@ class Solver():
         point_1 = self.simplex.points[0]
         point_2 = self.simplex.points[1]
         point_3 = self.simplex.points[2]
-        gfxdraw.circle(self.all_objects[0].surface, int(point_1[0] + 960), int(point_1[1] + 540), 3, (255, 0, 0))
-        gfxdraw.circle(self.all_objects[0].surface, int(point_2[0] + 960), int(point_2[1] + 540), 3, (0, 255, 0))
-        gfxdraw.circle(self.all_objects[0].surface, int(point_3[0] + 960), int(point_3[1] + 540), 3, (0, 0, 255))
+        # gfxdraw.circle(self.all_objects[0].surface, int(point_1[0] + 960), int(point_1[1] + 540), 3, (255, 0, 0))
+        # gfxdraw.circle(self.all_objects[0].surface, int(point_2[0] + 960), int(point_2[1] + 540), 3, (0, 255, 0))
+        # gfxdraw.circle(self.all_objects[0].surface, int(point_3[0] + 960), int(point_3[1] + 540), 3, (0, 0, 255))
         
         length_1_2 = point_2 - point_1
         length_1_3 = point_3 - point_1 
@@ -824,6 +847,10 @@ class Solver():
                 
                 if abs(small_distance - minimum_distance) > 0.001:
                     minimum_distance = math.inf
+                    try:
+                        polytope.points.remove(support)
+                    except ValueError:
+                        print("die")
                     polytope.points.insert(minimum_index, support)
                     
         return minimum_normal * (minimum_distance + 0.001)
