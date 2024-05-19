@@ -3,7 +3,7 @@ import pygame
 from pygame import Vector2
 from pygame import gfxdraw
 import math
-from copy import deepcopy
+# from copy import deepcopy
 
 
 # start = perf_counter()
@@ -108,6 +108,17 @@ class Ball(PhysicsObject):
             return True
 
     
+    def support_point(self, direction: Vector2) -> Vector2:
+        try:
+            direction = direction.normalize()
+        except ValueError:
+            pass
+        
+        direction *= self.radius
+        
+        return self.position + direction
+
+
 
 class Line(PhysicsObject):
     """Lines of..."""
@@ -127,7 +138,7 @@ class Line(PhysicsObject):
         self.last_position_2 = position_2
         self.segment_vector = self.position_2 - self.position
         self.normal = self.segment_vector.rotate(90)
-
+        self.points = [self.position, self.position_2]
 
     def update_position(self, delta_time: float) -> None:  
         self.displacement_2 = self.position_2 - self.last_position_2
@@ -137,7 +148,7 @@ class Line(PhysicsObject):
         self.position_2 = self.position_2 + self.displacement_2 + self.acceleration * (delta_time*delta_time) #position = position + displacement + acceleration * (delta_time * delta_time)
         
         super().update_position(delta_time)
-    
+        self.points = [self.position, self.position_2]
 
     def draw_antialiased_wireframe(self) -> bool:
         """Draws the antialiased wireframe of the object.
@@ -162,13 +173,25 @@ class Line(PhysicsObject):
             return True
 
 
+    def support_point(self, direction: Vector2) -> Vector2:
+        max_point = Vector2()
+        max_distance = float(-99999999999999999999999)
+    
+        for point in self.points:
+            distance = point.dot(direction)
+            
+            if distance > max_distance:
+                max_distance = distance
+                max_point = point
+                
+        return max_point
 
-class Square(PhysicsObject):
-    pass
+# class Square(PhysicsObject):
+#     pass
 
 
 
-class Triangle(PhysicsObject):
+# class Triangle(PhysicsObject):
     pass
 
 
@@ -368,17 +391,24 @@ class Solver():
                     self.line_on_line(object_1, object_2)
                     continue
 
-                
-                elif (object_1_type == Polygon) and (object_2_type == Polygon):
+                elif (object_1_type == Polygon) or (object_2_type == Polygon):
+                # elif ((object_1_type == Polygon)and(len(object_1.points) > 3)) and (object_2_type == Polygon):
                     if self.gjk(object_1, object_2):
-                        normal = self.EPA(self.simplex, object_1, object_2)
-                        try:
-                            object_1.position += normal.normalize()
-                            object_2.position -= normal.normalize()
-                        except ValueError:
-                            object_1.position += normal/200000
-                            object_2.position -= normal/200000
+                        object_1.surface.fill((255, 0, 0))
+                        
+                    else:
+                        pass
+                    
                     continue
+                    # if self.gjk(object_1, object_2):
+                    #     normal = self.EPA(self.simplex, object_1, object_2)
+                    #     try:
+                    #         object_1.position += normal.normalize() * (not object_1.anchored)
+                    #         object_2.position -= normal.normalize() * (not object_2.anchored)
+                    #     except ValueError:
+                    #         object_1.position += normal/200000 * (not object_1.anchored)
+                    #         object_2.position -= normal/200000 * (not object_2.anchored)
+                    # continue
 
     
     def ball_on_ball(self, ball_1:Ball, ball_2:Ball) -> bool:
@@ -655,16 +685,17 @@ class Solver():
     
     def gjk(self, polygon_1: Polygon, polygon_2: Polygon) -> bool:
         self.direction = polygon_2.position - polygon_1.position # because it will likely give an extreme point
+        # gfxdraw.circle(self.all_objects[0].surface, int(self.direction[0] + 960), int(self.direction[1] + 540), 3, (255, 0, 255))
         support_point = self.find_support(polygon_1, polygon_2, self.direction)
         
-        points = []
-        for i in range(360):
-            temp = self.find_support(polygon_1, polygon_2, Vector2(1, 0).rotate(-i))
-            if temp not in points:
-                points.append(Vector2(temp[0] + 960, temp[1] + 540))
-        # print(points)
-        gfxdraw.circle(self.all_objects[0].surface, 960, 540, 2, (0,0,255))
-        gfxdraw.polygon(self.all_objects[0].surface, points, (255, 0, 0))
+        # points = []
+        # for i in range(45):
+        #     temp = self.find_support(polygon_1, polygon_2, Vector2(1, 0).rotate(-i*8))
+        #     if temp not in points:
+        #         points.append(Vector2(temp[0] + 960, temp[1] + 540))
+        # # print(points)
+        # gfxdraw.circle(self.all_objects[0].surface, 960, 540, 2, (0,0,255))
+        # gfxdraw.polygon(self.all_objects[0].surface, points, (255, 0, 0))
         
         self.simplex = Simplex()
         self.simplex.push_front(support_point)
@@ -672,39 +703,42 @@ class Solver():
         
         self.direction = -support_point
         
-        iteration = 0
+        # iteration = 0
         looping = True
         # while looping and iteration < 100:
         while looping:
-            iteration+=1
+            # iteration+=1
             # print(f"SUPPORT: {support_point}")
             support_point = self.find_support(polygon_1, polygon_2, self.direction)
             
+            # print(iteration, support_point, self.direction, support_point.dot(self.direction))
+            # print(support_point.dot(self.direction))
             if (support_point.dot(self.direction) <= 0):
-                looping = False
-                print("false")
+                # print("false")
                 return False
             
             self.simplex.push_front(support_point)
             
-            fake_simplex = deepcopy(self.simplex.points)
-            for point in range(len(fake_simplex)):
-                fake_simplex[point] = Vector2(fake_simplex[point][0] + 960, fake_simplex[point][1] + 540)
+            # fake_simplex = deepcopy(self.simplex.points)
+            # for point in range(len(fake_simplex)): 
+            #     fake_simplex[point] = Vector2(fake_simplex[point][0] + 960, fake_simplex[point][1] + 540)
                 
-            try:
-                gfxdraw.aapolygon(self.all_objects[0].surface, fake_simplex, (0, 255, 0))
-                pass
-            except ValueError:
-                pass
+            # try:
+            #     gfxdraw.aapolygon(self.all_objects[0].surface, fake_simplex, (0, 255, 0))
+            #     pass
+            # except ValueError:
+            #     pass
             
             if (self.next_simplex(self.simplex.points, self.direction)):
-                print("collide")
-                looping = False
+                # print("collide")
                 return True
             # elif len(self.points) > 3:
             #     break
             # else:
             #     return False
+            
+        # print("false kill")
+        return False
 
     
     def next_simplex(self, points: list[Vector2], direction: Vector2) -> bool:
@@ -719,64 +753,89 @@ class Solver():
     
     
     def line(self, points: list[Vector2], direction: Vector2) -> bool:
-        point_1 = points[0]
-        point_2 = points[1]
+        point_1 = pygame.Vector3(points[0][0], points[0][1], 0)
+        point_2 = pygame.Vector3(points[1][0], points[1][1], 0)
         # gfxdraw.circle(self.all_objects[0].surface, int(point_1[0] + 960), int(point_1[1] + 540), 3, (255, 0, 0))
         # gfxdraw.circle(self.all_objects[0].surface, int(point_2[0] + 960), int(point_2[1] + 540), 3, (0, 255, 0))        
         point_1_2 = point_2 - point_1
-        a_negative = - point_1
+        a_negative = -point_1
         
         if self.same_direction(point_1_2, a_negative):
-            self.direction = a_negative
+            temp = point_1_2.cross(a_negative).cross(point_1_2)
+            self.direction = Vector2(temp[0], temp[1])
+            # self.direction = a_negative
             
         else:
-            self.simplex.points = point_1
-            self.direction = a_negative
+            self.simplex.points = [Vector2(point_1[0], point_1[1])]
+            self.direction = Vector2(a_negative[0], a_negative[1])
             
         return False
     
     
     def triangle(self, points: list[Vector2], direction: Vector2) -> bool:
         
-        point_1 = self.simplex.points[0]
-        point_2 = self.simplex.points[1]
-        point_3 = self.simplex.points[2]
-        gfxdraw.circle(self.all_objects[0].surface, int(point_1[0] + 960), int(point_1[1] + 540), 3, (255, 0, 0))
-        gfxdraw.circle(self.all_objects[0].surface, int(point_2[0] + 960), int(point_2[1] + 540), 3, (0, 255, 0))
-        gfxdraw.circle(self.all_objects[0].surface, int(point_3[0] + 960), int(point_3[1] + 540), 3, (0, 0, 255))
+        point_1 = pygame.Vector3(self.simplex.points[0][0], self.simplex.points[0][1], 0)
+        point_2 = pygame.Vector3(self.simplex.points[1][0], self.simplex.points[1][1], 0)
+        point_3 = pygame.Vector3(self.simplex.points[2][0], self.simplex.points[2][1], 0)
+        # gfxdraw.circle(self.all_objects[0].surface, int(point_1[0] + 960), int(point_1[1] + 540), 3, (255, 0, 0))
+        # gfxdraw.circle(self.all_objects[0].surface, int(point_2[0] + 960), int(point_2[1] + 540), 3, (0, 255, 0))
+        # gfxdraw.circle(self.all_objects[0].surface, int(point_3[0] + 960), int(point_3[1] + 540), 3, (0, 0, 255))
         
         length_1_2 = point_2 - point_1
         length_1_3 = point_3 - point_1 
         negative_1 = -point_1
-        # cross_1_2_3 = Vector2(length_1_2.cross(length_1_3))
-        point_1_2_perpendicular = perpendicular(length_1_2)
-        point_1_3_perpendicular = perpendicular(length_1_3)
         
+        # gfxdraw.circle(self.all_objects[0].surface, int(length_1_2[0] + 960), int(length_1_2[1] + 540), 3, (255, 165, 0))
+        # gfxdraw.circle(self.all_objects[0].surface, int(length_1_3[0] + 960), int(length_1_3[1] + 540), 3, (0, 165, 255))
+        
+        # gfxdraw.circle(self.all_objects[0].surface, int(negative_1[0] + 960), int(negative_1[1] + 540), 3, (255, 255, 255))
+        
+        cross_1_2_3 = length_1_2.cross(length_1_3)
+        # point_1_2_perpendicular = pygame.Vector3(perpendicular(length_1_2))
+        # point_1_3_perpendicular = pygame.Vector3(perpendicular(length_1_3))
 
-        if (self.same_direction(point_1_3_perpendicular, negative_1)):
-            if (self.same_direction(length_1_3, negative_1)):
+
+        if (self.same_direction(cross_1_2_3.cross(length_1_3), negative_1)):
+            if self.same_direction(length_1_3, negative_1):
+                temp = length_1_3.cross(negative_1).cross(length_1_3)
+                self.direction = Vector2(temp[0], temp[1])
                 
-            # if (self.same_direction(length_1_3, negative_1)):
-                self.simplex.points = [point_1, point_3]
-                self.direction = point_1_3_perpendicular
-            # return self.line([point_1, point_3], point_1_3_perpendicular)
+                self.simplex.points = [Vector2(point_1[0], point_1[1]), Vector2(point_3[0], point_3[1])]
 
             else:
-                return self.line([point_1, point_2], self.direction)
+                return self.line([Vector2(point_1[0], point_1[1]), Vector2(point_2[0], point_2[1])], self.direction)
+            
+        else:
+            if self.same_direction(length_1_2.cross(cross_1_2_3), negative_1):
+                return self.line([Vector2(point_1[0], point_1[1]), Vector2(point_2[0], point_2[1])], self.direction)
+            
+            else:
+                return True
+
+        # if (self.same_direction(point_1_3_perpendicular, negative_1)):
+        #     if (self.same_direction(length_1_3, negative_1)):
+                
+        #     # if (self.same_direction(length_1_3, negative_1)):
+        #         self.simplex.points = [point_1, point_3]
+        #         self.direction = point_1_3_perpendicular
+        #     # return self.line([point_1, point_3], point_1_3_perpendicular)
+
+        #     else:
+        #         return self.line([point_1, point_2], self.direction)
             
         
     
-        else:
-            if (self.same_direction(point_1_2_perpendicular, negative_1)):
-                return self.line([point_1, point_2], self.direction)
-                # if (self.same_direction(length_1_2, negative_1)):
-                #     self.simplex.points = [point_1, point_2]
-                #     self.direction = point_1_2_perpendicular
-                # return self.line([point_1, point_2], point_1_2_perpendicular)
+        # else:
+        #     if (self.same_direction(point_1_2_perpendicular, negative_1)):
+        #         return self.line([point_1, point_2], self.direction)
+        #         # if (self.same_direction(length_1_2, negative_1)):
+        #         #     self.simplex.points = [point_1, point_2]
+        #         #     self.direction = point_1_2_perpendicular
+        #         # return self.line([point_1, point_2], point_1_2_perpendicular)
 
 
-            else:
-                return True
+        #     else:
+        #         return True
                 # if (self.same_direction(length_1_2, negative_1)):
                 #     self.direction = length_1_2
 

@@ -45,13 +45,16 @@ not_mouse_objects = [Ball(display, Vector2(WINDOW_WIDTH/4, WINDOW_HEIGHT/4), 40,
 # not_mouse_objects = [Line(display, Vector2(728.0, 959.0), Vector2(1366.0, 511.0), anchored=True)]
 not_mouse_objects = [Polygon(display, Vector2(WINDOW_WIDTH/2, WINDOW_HEIGHT/2), radius=50, point_amount=5, anchored=True)]
 not_mouse_objects = [Polygon(display, Vector2(WINDOW_WIDTH/3, WINDOW_HEIGHT/3), radius=30, point_amount=3, anchored=False), Polygon(display, Vector2(200, 200), radius=50, point_amount=5, anchored=True)]
-not_mouse_objects = [Polygon(display, Vector2(WINDOW_WIDTH/3, WINDOW_HEIGHT/3), [Vector2(100, 100), Vector2(200, 100), Vector2(200, 200), Vector2(100, 200)], anchored=False), Polygon(display, Vector2(200, 200), [Vector2(300, 400), Vector2(350, 300), Vector2(400, 400)], anchored=True)]
+not_mouse_objects = [Polygon(display, Vector2(150, 150), [Vector2(100, 100), Vector2(200, 100), Vector2(200, 200), Vector2(100, 200)], anchored=False), Polygon(display, Vector2(350, 350), [Vector2(300, 400), Vector2(350, 300), Vector2(400, 400)], anchored=True)]
+# not_mouse_objects = [Polygon(display, Vector2(150, 150), [Vector2(100, 100), Vector2(200, 100), Vector2(200, 200), Vector2(100, 200)], anchored=False)]
 
 # not_mouse_objects = [Polygon(display, Vector2(WINDOW_WIDTH/2, WINDOW_HEIGHT/2), [Vector2(1023, 10), Vector2(129, 123), Vector2(1202, 564), Vector2(654, 456)], anchored=True)]
 # othergon = Polygon(display, Vector2(WINDOW_WIDTH/2, WINDOW_HEIGHT/2), radius=30, point_amount=3, anchored=False)
 
 # not_mouse_objects = [Line(display, Vector2(646.0, 413.0), Vector2(660.0, 832.0), anchored=True)]
 box = [Line(display, Vector2(0, 0), Vector2(0, WINDOW_HEIGHT-2), anchored=True), Line(display, Vector2(0, WINDOW_HEIGHT-1), Vector2(WINDOW_WIDTH-1, WINDOW_HEIGHT-1), anchored=True), Line(display, Vector2(WINDOW_WIDTH-1, WINDOW_HEIGHT-1), Vector2(WINDOW_WIDTH-1, 0+1), anchored=True), Line(display, Vector2(0, 0), Vector2(WINDOW_WIDTH-1, 0), anchored=True)]
+box = [Ball(display, Vector2(WINDOW_WIDTH//2, WINDOW_HEIGHT//2), 20)]
+box = []
 not_mouse_objects = not_mouse_objects + box
 
 invisible_physics_objects = [] #for invisible walls, etc
@@ -64,6 +67,7 @@ drawing = False
 
 phys_solver = Solver(grav_objects, no_grav_objects, gravity=1000)
 
+follow_mouse = False
 
 #Functions
 
@@ -93,38 +97,38 @@ while engine_running:
         elif event.type == pygame.KEYDOWN:
             if event.key == pygame.K_UP: #Manuever "player"
                 try:
-                    grav_objects[0].position[1] -= .5
+                    grav_objects[0].position[1] -= .1
                 except IndexError:
                     try:
-                        not_mouse_objects[0].position[1] -=.25
+                        not_mouse_objects[0].position[1] -=.1
                     except IndexError:
                         print("index Errror")
                         continue
                 
             elif event.key == pygame.K_DOWN:
                 try:
-                    grav_objects[0].position[1] += .5
+                    grav_objects[0].position[1] += .1
                 except IndexError:
                     try:
-                        not_mouse_objects[0].position[1] +=.25
+                        not_mouse_objects[0].position[1] +=.1
                     except IndexError:
                         continue
 
             elif event.key == pygame.K_LEFT:
                 try:
-                    grav_objects[0].position[0] -= .5
+                    grav_objects[0].position[0] -= .1
                 except IndexError:
                     try:
-                        not_mouse_objects[0].position[0] -=.25
+                        not_mouse_objects[0].position[0] -=.1
                     except IndexError:
                         continue
 
             elif event.key == pygame.K_RIGHT:
                 try:
-                    grav_objects[0].position[0] += .5
+                    grav_objects[0].position[0] += .1
                 except IndexError:
                     try:
-                        not_mouse_objects[0].position[0] +=.25
+                        not_mouse_objects[0].position[0] +=.1
                     except IndexError:
                         continue
             
@@ -138,6 +142,9 @@ while engine_running:
             elif event.key == pygame.K_1:
                 mouse_pos = pygame.mouse.get_pos()
                 mouse_objects.append(Ball(display, Vector2(mouse_pos[0], mouse_pos[1]), 20))
+            
+            elif event.key == pygame.K_m:
+                follow_mouse = not follow_mouse
                 
         
     no_grav_objects = not_mouse_objects + mouse_objects + invisible_physics_objects
@@ -156,7 +163,13 @@ while engine_running:
         object.draw_antialiased_wireframe()
         
     # othergon.draw_antialiased_wireframe()
-        
+    
+    if follow_mouse:
+        mouse_pos = pygame.mouse.get_pos()
+        mouse_pos = Vector2(mouse_pos[0], mouse_pos[1])
+        not_mouse_objects[0].position = mouse_pos
+        not_mouse_objects[0].last_position = mouse_pos
+    
     if drawing:
         mouse_pos = pygame.mouse.get_pos()
         mouse_vector = Vector2(mouse_pos[0], mouse_pos[1])
