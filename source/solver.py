@@ -1,6 +1,6 @@
 from time import perf_counter # noqa: F401
 import pygame
-from pygame import Vector2
+from pygame import Vector2, Vector3
 from pygame import gfxdraw
 import math
 # from copy import deepcopy
@@ -22,6 +22,7 @@ def perpendicular(vector:Vector2) -> Vector2:
         Vector2: Perpendicular of the inputted vector.
     """    
     return Vector2(-vector[1], vector[0])
+
 
 
 class PhysicsObject():
@@ -99,10 +100,10 @@ class Ball(PhysicsObject):
         try:
             gfxdraw.aacircle(self.surface, int(self.position[0]), int(self.position[1]), self.radius, self.color)
         except OverflowError:
-            print(f"OBJECT [{self}] OUT OF BOUNDS, MOVING TO 0, 0 AND KILLING VELOCITY.")
+            print(f"OBJECT [{self}] OUT OF BOUNDS, MOVING TO CENTER AND KILLING VELOCITY.")
             
-            self.position = Vector2(0, 0)
-            self.last_position = Vector2(0, 0)
+            self.position = Vector2(self.surface.get_width()//2, self.surface.get_height()//2)
+            self.last_position = Vector2(self.surface.get_width()//2, self.surface.get_height()//2)
             
             gfxdraw.aacircle(self.surface, int(self.position[0]), int(self.position[1]), self.radius, self.color)
             return True
@@ -123,32 +124,32 @@ class Ball(PhysicsObject):
 class Line(PhysicsObject):
     """Lines of..."""
 
-    def __init__(self, surface: pygame.Surface, position: Vector2, position_2: Vector2, color: pygame.Color = (200, 200, 200), anchored: bool = False) -> None:
+    def __init__(self, surface: pygame.Surface, position: Vector2, points:list[Vector2], color: pygame.Color = (200, 200, 200), anchored: bool = False) -> None:
         """Lines, the building blocks of all polygons.
 
         Args:
             surface (pygame.Surface): Surface to draw onto.
-            position (Vector2): Start of the line.
-            position_2 (Vector2): End of the line.
+            position (Vector2): Center of the line.
+            points (list[Vector2]): Points of the line.
             color (pygame.Color, optional): Color of the line. Defaults to (200, 200, 200) (light gray).
             anchored (bool, optional): If the line is anchored into place or not. Defaults to False.
         """        
         super().__init__(surface, position, color, anchored)
-        self.position_2 = position_2
-        self.last_position_2 = position_2
-        self.segment_vector = self.position_2 - self.position
+        self.points = points
+        self.point_relatives = []
+        self.segment_vector = self.points[1] - self.points[0]
         self.normal = self.segment_vector.rotate(90)
-        self.points = [self.position, self.position_2]
+        self.radius = (self.position - self.points[0]).length()
+        
+        for point in self.points:
+            self.point_relatives.append(point - self.position)
+        
 
     def update_position(self, delta_time: float) -> None:  
-        self.displacement_2 = self.position_2 - self.last_position_2
-
-        self.last_position_2 = self.position_2
-
-        self.position_2 = self.position_2 + self.displacement_2 + self.acceleration * (delta_time*delta_time) #position = position + displacement + acceleration * (delta_time * delta_time)
-        
         super().update_position(delta_time)
-        self.points = [self.position, self.position_2]
+        for point in range(len(self.points)):
+            self.points[point] = self.point_relatives[point] + self.position
+
 
     def draw_antialiased_wireframe(self) -> bool:
         """Draws the antialiased wireframe of the object.
@@ -157,19 +158,18 @@ class Line(PhysicsObject):
             bool: Returns if the object was too far out in the case of an overflow error.
         """        
         try:
-            gfxdraw.line(self.surface, int(self.position[0]), int(self.position[1]), int(self.position_2[0]), int(self.position_2[1]), self.color)
+            gfxdraw.line(self.surface, int(self.points[0][0]), int(self.points[0][1]), int(self.points[1][0]), int(self.points[1][1]), self.color)
         
         except OverflowError:
-            print(f"OBJECT [{self}] OUT OF BOUNDS, MOVING TO 0, 0 AND KILLING VELOCITY.")
+            print(f"OBJECT [{self}] OUT OF BOUNDS, MOVING TO CENTER AND KILLING VELOCITY.")
             
-            adjusted_position_2 = self.position_2 - self.position #so that line doesn't lose length or rotation
+            self.position = Vector2(self.surface.get_width()//2, self.surface.get_height()//2)
+            self.last_position = Vector2(self.surface.get_width()//2, self.surface.get_height()//2)
+
+            for i in range(2):
+                self.points[i] = self.position + self.point_relatives[i]
             
-            self.position = Vector2(0, 0)
-            self.last_position = Vector2(0, 0)
-            self.position_2 = adjusted_position_2
-            self.last_position_2 = adjusted_position_2
-            
-            gfxdraw.line(self.surface, int(self.position[0]), int(self.position[1]), int(self.position_2[0]), int(self.position_2[1]), self.color)
+            gfxdraw.line(self.surface, int(self.points[0][0]), int(self.points[0][1]), int(self.points[1][0]), int(self.points[1][1]), self.color)
             return True
 
 
@@ -186,26 +186,18 @@ class Line(PhysicsObject):
                 
         return max_point
 
-# class Square(PhysicsObject):
-#     pass
-
-
-
-# class Triangle(PhysicsObject):
-    pass
-
 
 
 class Polygon(PhysicsObject):
     
-    def __init__(self, surface: pygame.Surface, position: Vector2, points:list[Vector2] = [], radius: float = 10, point_amount: int = 3, color: pygame.Color = (200, 200, 200), anchored: bool = False) -> None:
+    def __init__(self, surface: pygame.Surface, position: Vector2, points:list[Vector2] = [], radius: float = None, point_amount: int = 3, color: pygame.Color = (200, 200, 200), anchored: bool = False, motor: int = 0) -> None:
         """A polygon physics object that you can manually build or input a radius and points for a procedural generation.
 
         Args:
             surface (pygame.Surface): Surface to draw onto.
             position (Vector2): Center of the polygon.
             points (list[Vector2], optional): The positions of the polygon's points; needs at least 3 points. Defaults to autogenerated points based on the center and radius if there is not enough points.
-            radius (float, optional): Radius of the procedural polygon. Defaults to 10.
+            radius (float): Radius of the procedural polygon.
             point_amount (int, optional): Amount of points to build the procedural polygon. Defaults to 3.
             color (pygame.Color, optional): Color of the polygon. Defaults to (200, 200, 200) (light gray).
             anchored (bool, optional): If the polygon is anchored into place or not. Defaults to False.
@@ -215,7 +207,8 @@ class Polygon(PhysicsObject):
         self.points = points
         self.radius = radius
         self.point_amount = point_amount
-        
+        self.rotation = 0
+        self.motor = motor
         
         if len(self.points) < 3:
             self.points = []
@@ -232,6 +225,16 @@ class Polygon(PhysicsObject):
         else:
             self.procedural = False
         
+        if self.radius is None:
+            self.radius = 0
+            max_radius = float(-9999999)
+            for point in self.points:
+                possible_radius = (self.position - point).length()
+                if possible_radius > max_radius:
+                    max_radius = possible_radius
+            self.radius = max_radius
+        
+        
         self.point_relatives = []    
         
         for point in self.points:
@@ -240,8 +243,20 @@ class Polygon(PhysicsObject):
             
     def update_position(self, delta_time: float) -> None:
         super().update_position(delta_time)
+
+        self.rotation += self.motor
+        if self.rotation >= 360:
+            self.rotation-=360
+        elif self.rotation <= -360:
+            self.rotation+=360
+
         for point in range(len(self.points)):
             self.points[point] = self.point_relatives[point] + self.position #cheaper than velocity calculation for all points
+
+
+            temporary_point = self.points[point]
+            self.points[point] = Vector2(int(math.cos(math.radians(self.rotation)) * (temporary_point[0] - self.position[0]) - math.sin(math.radians(self.rotation)) * (temporary_point[1] - self.position[1]) + self.position[0]), 
+                                         int(math.sin(math.radians(self.rotation)) * (temporary_point[0] - self.position[0]) + math.cos(math.radians(self.rotation)) * (temporary_point[1] - self.position[1]) + self.position[1]))
 
     
     def draw_antialiased_wireframe(self) -> bool:
@@ -254,7 +269,7 @@ class Polygon(PhysicsObject):
             gfxdraw.aapolygon(self.surface, self.points, self.color)
         
         except OverflowError:
-            print(f"OBJECT [{self}] OUT OF BOUNDS, MOVING TO 0, 0 AND KILLING VELOCITY.")
+            print(f"OBJECT [{self}] OUT OF BOUNDS, MOVING TO CENTER AND KILLING VELOCITY.")
             
             new_points = []
             for point in self.points:
@@ -262,11 +277,12 @@ class Polygon(PhysicsObject):
             
             self.points = new_points
             # self.points = deepcopy(new_points)
-            self.position = Vector2(0, 0)
+            self.position = Vector2(self.surface.get_width()//2, self.surface.get_height()//2)
+            self.last_position = Vector2(self.surface.get_width()//2, self.surface.get_height()//2)
             
             gfxdraw.aapolygon(self.surface, self.points, self.color)
             return True
-        
+           
            
     def support_point(self, direction: Vector2) -> Vector2:
         max_point = Vector2()
@@ -283,8 +299,6 @@ class Polygon(PhysicsObject):
     
 
 
-
-
 class Simplex():
     
     def __init__(self) -> None:
@@ -297,9 +311,6 @@ class Simplex():
             self.points.pop()
         self.size = min(self.size+1, 3)
         
-
-
-
 
 
 class Solver():
@@ -322,6 +333,16 @@ class Solver():
         
         self.time_elapsed = 0
 
+        self.performance_analytics = {
+            "Collisions":[],
+            "Position_Updates":[],
+            # "Update":[],
+            "GJK/EPA":[],
+            "Line/Ball":[],
+            "Ball/Ball":[]
+        }
+
+
     
     def update(self, delta_time:float) -> None:
         """Applies gravity, updates, and solves collisions between all Solver objects.
@@ -336,8 +357,22 @@ class Solver():
 
         for subset in range(self.subsets): #surely there's a better way?
             self.apply_gravity(self.gravity)
+            # start = perf_counter()
+            collision = perf_counter()
             self.solve_collisions()
+            try:
+                self.performance_analytics["Collisions"].insert(0, (perf_counter()-collision)*1000)
+                self.performance_analytics["Collisions"].pop(16)
+            except IndexError:
+                self.performance_analytics["Collisions"].insert(0, (perf_counter()-collision)*1000)
+            
+            update_positions = perf_counter()
             self.update_positions(subset_delta_time)
+            try:
+                self.performance_analytics["Position_Updates"].insert(0, (perf_counter()-update_positions)*1000)
+                self.performance_analytics["Position_Updates"].pop(16)
+            except IndexError:
+                self.performance_analytics["Position_Updates"].insert(0, (perf_counter()-update_positions)*1000)
 
     
     def update_positions(self, delta_time:float) -> None:
@@ -373,42 +408,72 @@ class Solver():
                 if object_1 == object_2:
                     continue
                 
+                
+                
+                if (object_1.radius + object_2.radius) < Vector2(object_2.position - object_1.position).length():
+                    continue
+                
                 object_2_type = type(object_2)
 
                 if (object_1_type == Ball) and (object_2_type == Ball):
+                    ball_ball = perf_counter()
                     self.ball_on_ball(object_1, object_2)
-                    continue
-
-                elif ((object_1_type == Line) and (object_2_type == Ball)) or ((object_1_type == Ball) and (object_2_type == Line)):
-                    if (object_1_type == Line) and (object_2_type == Ball):
-                        self.line_on_ball(object_1, object_2)
-                        continue
-                    else:
-                        self.line_on_ball(object_2, object_1)
-                        continue
+                    
+                    try:
+                        self.performance_analytics["Ball/Ball"].insert(0, (perf_counter()-ball_ball)*1000)
+                        self.performance_analytics["Ball/Ball"].pop(16)
+                    except IndexError:
+                        self.performance_analytics["Ball/Ball"].insert(0, (perf_counter()-ball_ball)*1000)
                         
-                elif (object_1_type == Line) and (object_2_type == Line):
-                    self.line_on_line(object_1, object_2)
                     continue
+                
+
+                elif ((object_1_type == Line) and (object_2_type == Ball)):
+                    line_ball = perf_counter()
+                    self.line_on_ball(object_1, object_2)
+                    
+                    try:
+                        self.performance_analytics["Line/Ball"].insert(0, (perf_counter()-line_ball)*1000)
+                        self.performance_analytics["Line/Ball"].pop(16)
+                    except IndexError:
+                        self.performance_analytics["Line/Ball"].insert(0, (perf_counter()-line_ball)*1000)
+                        
+                    continue
+                    
+
+                elif ((object_1_type == Ball) and (object_2_type == Line)):
+                    line_ball = perf_counter()
+                    self.line_on_ball(object_2, object_1)
+                    
+                    try:
+                        self.performance_analytics["Line/Ball"].insert(0, (perf_counter()-line_ball)*1000)
+                        self.performance_analytics["Line/Ball"].pop(16)
+                    except IndexError:
+                        self.performance_analytics["Line/Ball"].insert(0, (perf_counter()-line_ball)*1000)
+                    
+                    continue    
+                    
 
                 elif (object_1_type == Polygon) or (object_2_type == Polygon):
-                # elif ((object_1_type == Polygon)and(len(object_1.points) > 3)) and (object_2_type == Polygon):
+                    gjk_epa = perf_counter()
                     if self.gjk(object_1, object_2):
-                        object_1.surface.fill((255, 0, 0))
+                        # object_1.surface.fill((255, 0, 0))
+                        normal = self.EPA(self.simplex, object_1, object_2)/2
+                        try:
+                            normal = normal.normalize()
+                        except ValueError:
+                            pass
                         
-                    else:
-                        pass
-                    
+                        object_1.position -= normal * 0.05 * (not object_1.anchored)
+                        object_2.position += normal * 0.05 * (not object_2.anchored)
+                        
+                    try:
+                        self.performance_analytics["GJK/EPA"].insert(0, (perf_counter()-gjk_epa)*1000)
+                        self.performance_analytics["GJK/EPA"].pop(16)
+                    except IndexError:
+                        self.performance_analytics["GJK/EPA"].insert(0, (perf_counter()-gjk_epa)*1000)
+                        
                     continue
-                    # if self.gjk(object_1, object_2):
-                    #     normal = self.EPA(self.simplex, object_1, object_2)
-                    #     try:
-                    #         object_1.position += normal.normalize() * (not object_1.anchored)
-                    #         object_2.position -= normal.normalize() * (not object_2.anchored)
-                    #     except ValueError:
-                    #         object_1.position += normal/200000 * (not object_1.anchored)
-                    #         object_2.position -= normal/200000 * (not object_2.anchored)
-                    # continue
 
     
     def ball_on_ball(self, ball_1:Ball, ball_2:Ball) -> bool:
@@ -445,9 +510,9 @@ class Solver():
         Returns:
             bool: True or false of collision.
         """        
-        line_length = math.dist(line.position, line.position_2)
-        distance_1 = math.dist(point, line.position)
-        distance_2 = math.dist(point, line.position_2)
+        line_length = math.dist(line.points[0], line.points[1])
+        distance_1 = math.dist(point, line.points[0])
+        distance_2 = math.dist(point, line.points[1])
 
         buffer = 0.1
 
@@ -466,8 +531,8 @@ class Solver():
         Returns:
             bool: True or false of collision.
         """        
-        collision_axis = line.position - ball.position
-        collision_axis_2 = line.position_2 - ball.position
+        collision_axis = line.points[0] - ball.position
+        collision_axis_2 = line.points[1] - ball.position
 
         distance = collision_axis.length()
         distance_2 = collision_axis_2.length()
@@ -478,8 +543,8 @@ class Solver():
             except ZeroDivisionError:
                 n = Vector2()
             delta = ball.radius - distance
-            line.position += (0.5 * delta * n) * (not line.anchored)
-            line.position_2 += (0.5 * delta * n) * (not line.anchored)
+            line.points[0] += (0.5 * delta * n) * (not line.anchored)
+            line.points[1] += (0.5 * delta * n) * (not line.anchored)
             ball.position -= (0.5 * delta * n) * (not ball.anchored)
             return True
 
@@ -489,17 +554,17 @@ class Solver():
             except ZeroDivisionError:
                 n = Vector2()
             delta = ball.radius - distance_2
-            line.position += (0.5 * delta * n) * (not line.anchored)
-            line.position_2 += (0.5 * delta * n) * (not line.anchored)
+            line.points[0] += (0.5 * delta * n) * (not line.anchored)
+            line.points[1] += (0.5 * delta * n) * (not line.anchored)
             ball.position -= (0.5 * delta * n) * (not ball.anchored)
             return True
 
-        line_length = math.dist(line.position, line.position_2)
+        line_length = math.dist(line.points[0], line.points[1])
         
-        dot_product = (((ball.position[0] - line.position[0]) * (line.position_2[0] - line.position[0])) + ((ball.position[1] - line.position[1]) * (line.position_2[1] - line.position[1]))) / math.pow(line_length, 2)
+        dot_product = (((ball.position[0] - line.points[0][0]) * (line.points[1][0] - line.points[0][0])) + ((ball.position[1] - line.points[0][1]) * (line.points[1][1] - line.points[0][1]))) / math.pow(line_length, 2)
         
-        closest_x = line.position[0] + (dot_product * (line.position_2[0] - line.position[0]))
-        closest_y = line.position[1] + (dot_product * (line.position_2[1] - line.position[1]))
+        closest_x = line.points[0][0] + (dot_product * (line.points[1][0] - line.points[0][0]))
+        closest_y = line.points[0][1] + (dot_product * (line.points[1][1] - line.points[0][1]))
         
         if self.line_on_point(line, Vector2(closest_x, closest_y)):
             return False
@@ -515,8 +580,8 @@ class Solver():
             except ZeroDivisionError:
                 n = Vector2()
             delta = ball.radius - ball_distance
-            line.position += (0.5 * delta * n) * (not line.anchored)
-            line.position_2 += (0.5 * delta * n) * (not line.anchored)
+            line.points[0] += (0.5 * delta * n) * (not line.anchored)
+            line.points[1] += (0.5 * delta * n) * (not line.anchored)
             ball.position -= (0.5 * delta * n) * (not ball.anchored)
             return True
         
@@ -748,6 +813,7 @@ class Solver():
             return self.triangle(points, direction)
         return False
     
+    
     def same_direction(self, direction: Vector2, a_negative: Vector2) -> bool:
         return direction.dot(a_negative) > 0
     
@@ -864,12 +930,18 @@ class Solver():
                 
                 vertex_i_j = vertex_j - vertex_i
                 try:
-                    normal = perpendicular(vertex_i_j).normalize()
+                    normal = Vector2(vertex_i_j[1], -vertex_i_j[0]).normalize()
                 except ValueError:
-                    normal = perpendicular(vertex_i_j)
+                    normal = Vector2(vertex_i_j[1], -vertex_i_j[0])
                 distance = normal.dot(vertex_i)
                 
-                if distance < 0:
+                # try:
+                #     normal = perpendicular(vertex_i_j).normalize()
+                # except ValueError:
+                #     normal = perpendicular(vertex_i_j)
+                # distance = normal.dot(vertex_i)
+                
+                if distance <= 0:
                     distance *= -1
                     normal *= -1
                     
@@ -878,11 +950,29 @@ class Solver():
                     minimum_normal = normal
                     minimum_index = j
                     
-                support = self.find_support(polygon_1, polygon_2, minimum_normal)
-                small_distance = minimum_normal.dot(support)
-                
-                if abs(small_distance - minimum_distance) > 0.001:
-                    minimum_distance = math.inf
-                    polytope.points.insert(minimum_index, support)
+                #     distance_minimum_i = i
+                #     distance_minimum_j = j
                     
+                # average = 0.5*(polytope.points[j] + polytope.points[i])
+                
+            support = self.find_support(polygon_1, polygon_2, minimum_normal)
+            small_distance = minimum_normal.dot(support)
+                
+            if abs(small_distance - minimum_distance) > 0.001:
+                minimum_distance = math.inf
+                polytope.points.insert(minimum_index, support)
+                
+            # else:
+                # length_i_j = polytope.points[distance_minimum_j] - polytope.points[distance_minimum_i]
+                # length_i_j = Vector3(length_i_j[0], length_i_j[1], 0)
+                # point_i = polytope.points[distance_minimum_i]
+                # point_i = Vector3(point_i[0], point_i[1], 0)
+                
+                
+                
+                # norm = length_i_j.cross(point_i).cross(length_i_j).normalize()
+                # dot = norm.dot(point_i)
+                
+                
+                
         return minimum_normal * (minimum_distance + 0.001)
